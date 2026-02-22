@@ -1,0 +1,50 @@
+{
+  "author": "eniallator",
+  "description": "Small toolkit for parsing forms to/from query parameters with a nice API",
+  "engines": {
+    "node": ">=25.4.0"
+  },
+  "homepage": "https://github.com/eniallator/Parform",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "name": "parform",
+  "packageManager": "yarn@4.12.0",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "version": "1.0.0",
+  "dependencies": {
+    "deep-guards": "^1.3.1",
+    "niall-utils": "1.0.0"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^2.0.2",
+    "@eslint/js": "^9.39.2",
+    "@stylistic/eslint-plugin": "^5.9.0",
+    "@types/eslint": "^9.6.1",
+    "@types/node": "^25.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "jsdom": "^28.1.0",
+    "prettier": "^3.8.1",
+    "strip-ansi": "^7.1.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.0",
+    "vitest": "^4.0.18"
+  },
+  "scripts": {
+    "test": "vitest run --passWithNoTests",
+    "build": "tsc",
+    "lint": "eslint ./src",
+    "typecheck": "tsc --noEmit",
+    "findissues": "yarn typecheck && yarn lint",
+    "publish": "npm publish --access=public --tolerate-republish",
+    "prepublish": "yarn typecheck && yarn lint && yarn build && yarn test",
+    "bump-and-release": "powershell -ExecutionPolicy Bypass -File ./scripts/bump-and-release.ps1",
+    "release": "powershell -ExecutionPolicy Bypass -File ./scripts/release.ps1"
+  }
+}
