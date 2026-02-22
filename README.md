@@ -181,8 +181,8 @@ yarn test
 
 ## API reference
 
--- **`SerialisableForm.addListener(callback, subscriptions?)`**: Register change listeners.
--- **`SerialisableForm.addCopyToClipboardHandler(selector, extra?)`**: Add a share button.
--- **`SerialisableForm.serialiseToUrlParams(extra?)`**: Return current config as a URL query string segment.
+- **`SerialisableForm.addListener(callback, subscriptions?)`**: Register change listeners.
+- **`SerialisableForm.addCopyToClipboardHandler(selector, extra?)`**: Add a share button.
+- **`SerialisableForm.serialiseToUrlParams(extra?)`**: Return current config as a URL query string segment.
 
 For implementation details and source, see the package `src/` files and parser implementations under `src/parsers/`.
