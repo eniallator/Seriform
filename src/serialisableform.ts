@@ -17,14 +17,15 @@ import type {
   ValueParser,
 } from "./types.ts";
 
-type ParformDiscriminatedOptions = DiscriminatedOptions<
+type SerialisableFormDiscriminatedOptions = DiscriminatedOptions<
   { query: string },
   { shortUrl?: false } | { shortUrl: true; hashLength?: number }
 >;
 
-export type ParformOptions = ParformDiscriminatedOptions["external"];
+export type SerialisableFormOptions =
+  SerialisableFormDiscriminatedOptions["external"];
 
-export class Parform<const R extends AnyStringRecord> {
+export class SerialisableForm<const R extends AnyStringRecord> {
   private readonly hashLength: number | null;
   private readonly extraValue: string | undefined;
   private readonly state: State<R>;
@@ -36,7 +37,7 @@ export class Parform<const R extends AnyStringRecord> {
   constructor(
     initParsers: InitParserObject<R>,
     baseEl: HTMLElement,
-    options: ParformDiscriminatedOptions["internal"]
+    options: SerialisableFormDiscriminatedOptions["internal"]
   ) {
     const { query, shortUrl, hashLength } = options;
     this.hashLength = shortUrl ? (hashLength ?? 6) : null;

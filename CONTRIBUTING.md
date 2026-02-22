@@ -1,6 +1,6 @@
-# Contributing to Parform
+# Contributing to Seriform
 
-Thank you for your interest in contributing to Parform! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to Seriform! This document provides guidelines and instructions for contributing to the project.
 
 ## Code of Conduct
 
@@ -20,8 +20,8 @@ Please review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all int
 2. **Clone your fork** locally:
 
    ```bash
-   git clone https://github.com/YOUR-USERNAME/Parform.git
-   cd Parform
+   git clone https://github.com/YOUR-USERNAME/Seriform.git
+   cd Seriform
    ```
 
 3. **Install dependencies**:
@@ -81,7 +81,7 @@ The project is organized into logical modules:
 - **`src/parsers/content`** - Content parsers that come out-of-the-box
 - **`src/parsers/value`** - Value parsers that come out-of-the-box
 - **`src/parsers/collection.ts`** - The collection parser
-- **`src/parform.ts`** - The main parform handling class
+- **`src/serialisableForm.ts`** - The main SerialisableForm handling class
 - **`src/create.ts`** - Typed creation helpers
 - **`src/helpers.ts`** - Internal helper methods
 - **`src/types.ts`** - Common types used for the library
@@ -229,4 +229,4 @@ When contributing features:
 
 Contributors will be recognized in release notes and git history. We appreciate all contributions, from code to documentation to bug reports!
 
-Thank you for helping make Parform better! 🎉
+Thank you for helping make Seriform better! 🎉

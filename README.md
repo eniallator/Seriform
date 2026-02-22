@@ -1,13 +1,17 @@
-# Parform
+# Seriform
 
-Yes you read that right, this library focuses on parsing forms - hence parform.\
-This package lets you define data driven forms, with full typescript support.\
+This package focuses on serialising forms, hence the name Seriform. It lets you define data driven forms, with full typescript support.\
 The motivation behind this was to create a light-weight, non-framework dependant form parsing library. I use this to create projects where I need to be able to share filled in forms, to create share links.
 
 ## Quick Example
 
 ```typescript
-import { Parform, createParsers, numberParser, rangeParser } from "parform";
+import {
+  SerialisableForm,
+  createParsers,
+  numberParser,
+  rangeParser,
+} from "seriform";
 
 const config = createParsers({
   speed: numberParser({
@@ -23,19 +27,19 @@ const config = createParsers({
 });
 
 const baseEl = document.getElementById("config-ui") as HTMLElement;
-const parform = new Parform(config, baseEl, {
+const seriform = new SerialisableForm(config, baseEl, {
   query: location.search,
   shortUrl: true,
 });
-parform.addCopyToClipboardHandler("#share-button");
-parform.addListener(values => {
+seriform.addCopyToClipboardHandler("#share-button");
+seriform.addListener(values => {
   console.log("Config changed:", values);
 });
 ```
 
 ## API Summary
 
-- **`Parform`**: Manages state, DOM, listeners, and URL sync.
+- **`SerialisableForm`**: Manages state, DOM, listeners, and URL sync.
 - **`createParsers<O>`**: Group parsers into a typed configuration object.
 - **`valueParser<T>`**: Create a value parser (text, number, range, etc.).
 - **`contentParser`**: Create non-editable content parsers (buttons, etc.).
@@ -69,8 +73,8 @@ All parsers accept common options: `label`, `title`, `default`, and `attrs` for 
 
 ## Type safety
 
-- **createParsers** The `createParsers` factory returns an object whose shape is reflected in the TypeScript types used by `Parform` and listeners. Use `InitParserObject` and `ParserValue` types to extract and reuse inferred shapes in your codebase.
-- **Polymorphic State Interaction** `Parform.getValue(id)` lets you retrieve the value of a given input, typed to that input's value.
+- **createParsers** The `createParsers` factory returns an object whose shape is reflected in the TypeScript types used by `SerialisableForm` and listeners. Use `InitParserObject` and `ParserValue` types to extract and reuse inferred shapes in your codebase.
+- **Polymorphic State Interaction** `SerialisableForm.getValue(id)` lets you retrieve the value of a given input, typed to that input's value.
 
 Example:
 
@@ -81,10 +85,12 @@ const config = createParsers({
 });
 
 const baseEl = document.getElementById("shareable-form");
-const parform = new Parform(config, baseEl, { query: location.search });
+const seriform = new SerialisableForm(config, baseEl, {
+  query: location.search,
+});
 
-parform.getValue("foo"); // Is type boolean
-parform.getValue("bar"); // Is type string
+seriform.getValue("foo"); // Is type boolean
+seriform.getValue("bar"); // Is type string
 ```
 
 ## Pluggable parsers
@@ -175,8 +181,8 @@ yarn test
 
 ## API reference
 
--- **`Parform.addListener(callback, subscriptions?)`**: Register change listeners.
--- **`Parform.addCopyToClipboardHandler(selector, extra?)`**: Add a share button.
--- **`Parform.serialiseToUrlParams(extra?)`**: Return current config as a URL query string segment.
+-- **`SerialisableForm.addListener(callback, subscriptions?)`**: Register change listeners.
+-- **`SerialisableForm.addCopyToClipboardHandler(selector, extra?)`**: Add a share button.
+-- **`SerialisableForm.serialiseToUrlParams(extra?)`**: Return current config as a URL query string segment.
 
 For implementation details and source, see the package `src/` files and parser implementations under `src/parsers/`.

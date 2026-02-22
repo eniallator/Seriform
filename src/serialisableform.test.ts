@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Parform } from "./parform.ts";
+import { SerialisableForm } from "./serialisableform.ts";
 import { contentParser, createParsers, valueParser } from "./create.ts";
 
 import type { InitParserObject } from "./types.ts";
@@ -27,20 +27,20 @@ const makeParsers = () =>
 type TestParserValues =
   ReturnType<typeof makeParsers> extends InitParserObject<infer T> ? T : never;
 
-describe("Parform", () => {
+describe("SerialisableForm", () => {
   let baseEl: HTMLElement;
-  let parform: Parform<TestParserValues>;
+  let seriform: SerialisableForm<TestParserValues>;
 
   beforeEach(() => {
     baseEl = document.createElement("div");
-    parform = new Parform(makeParsers(), baseEl, {
+    seriform = new SerialisableForm(makeParsers(), baseEl, {
       query: location.search,
     });
   });
 
   // --- getAllValues ---
   it("getAllValues returns all values", () => {
-    expect(parform.getAllValues()).toEqual({
+    expect(seriform.getAllValues()).toEqual({
       foo: "parsed",
       bar: null,
     });
@@ -48,61 +48,61 @@ describe("Parform", () => {
 
   // --- getValue ---
   it("getValue returns the value for a key", () => {
-    expect(parform.getValue("foo")).toBe("parsed");
-    expect(parform.getValue("bar")).toBe(null);
+    expect(seriform.getValue("foo")).toBe("parsed");
+    expect(seriform.getValue("bar")).toBe(null);
   });
 
   // --- setValue ---
   it("setValue updates the value and calls updateValue if type is 'Value'", () => {
-    parform.setValue("foo", "newVal");
-    expect(parform.getValue("foo")).toBe("newVal");
+    seriform.setValue("foo", "newVal");
+    expect(seriform.getValue("foo")).toBe("newVal");
 
-    parform.setValue("bar", "test");
-    expect(parform.getValue("bar")).toBe(null);
+    seriform.setValue("bar", "test");
+    expect(seriform.getValue("bar")).toBe(null);
   });
 
   // --- extra getter ---
   it("extra returns undefined if not set", () => {
-    expect(parform.extra).toBeUndefined();
+    expect(seriform.extra).toBeUndefined();
   });
 
   // --- addListener & tellListeners ---
   it("addListener and tellListeners notify listeners", () => {
     const cb = vi.fn();
-    parform.addListener(cb);
-    parform.tellListeners("foo");
-    expect(cb).toHaveBeenCalledWith(parform.getAllValues(), "foo");
+    seriform.addListener(cb);
+    seriform.tellListeners("foo");
+    expect(cb).toHaveBeenCalledWith(seriform.getAllValues(), "foo");
   });
 
   it("addListener with empty subscriptions notifies on any update", () => {
     const cb = vi.fn();
 
-    parform.addListener(cb, []);
-    parform.tellListeners("foo");
+    seriform.addListener(cb, []);
+    seriform.tellListeners("foo");
     expect(cb).toHaveBeenCalled();
 
     cb.mockClear();
-    parform.tellListeners("bar");
+    seriform.tellListeners("bar");
     expect(cb).toHaveBeenCalled();
   });
 
   it("tellListeners only notifies listeners subscribed to the id", () => {
     const cb = vi.fn();
-    parform.addListener(cb, ["foo"]);
-    parform.tellListeners("bar");
+    seriform.addListener(cb, ["foo"]);
+    seriform.tellListeners("bar");
     expect(cb).not.toHaveBeenCalled();
 
-    parform.tellListeners("foo");
+    seriform.tellListeners("foo");
     expect(cb).toHaveBeenCalled();
   });
 
   // --- serialiseToUrlParams ---
   it("serialiseToUrlParams returns correct string", () => {
-    const result = parform.serialiseToUrlParams("extraVal");
+    const result = seriform.serialiseToUrlParams("extraVal");
     expect(result).toBe("foo=serialised&extra=extraVal");
   });
 
   it("serialiseToUrlParams handles no extra", () => {
-    expect(parform.serialiseToUrlParams()).toBe("foo=serialised");
+    expect(seriform.serialiseToUrlParams()).toBe("foo=serialised");
   });
 });
