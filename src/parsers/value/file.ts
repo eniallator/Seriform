@@ -2,7 +2,7 @@ import { dom } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
 
-import type { ValueConfig } from "../../types.ts";
+import type { ValueConfig } from "../config.ts";
 
 export const fileParser = (cfg: ValueConfig<string> & { text?: string }) => {
   const defaultValue = cfg.default ?? "";

@@ -3,7 +3,7 @@ import { dom } from "niall-utils";
 import { valueParser } from "../../create.ts";
 import { defaultNumber, numToStr } from "./number.ts";
 
-import type { ValueConfig } from "../../types.ts";
+import type { ValueConfig } from "../config.ts";
 
 export const rangeParser = (cfg: ValueConfig<number>) => {
   const defaultValue = cfg.default ?? defaultNumber(cfg.attrs);

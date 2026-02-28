@@ -1,9 +1,9 @@
-import { dom } from "niall-utils";
 import { isOneOf } from "deep-guards";
+import { dom } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
 
-import type { ValueConfig } from "../../types.ts";
+import type { ValueConfig } from "../config.ts";
 
 export const checkboxParser = (cfg: ValueConfig<boolean>) => {
   const defaultValue = cfg.default ?? false;
@@ -16,11 +16,7 @@ export const checkboxParser = (cfg: ValueConfig<boolean>) => {
           ? `${shortUrl ? +getValue() : getValue()}`
           : null,
       updateValue: el => {
-        if (getValue()) {
-          el.setAttribute("checked", "");
-        } else {
-          el.removeAttribute("checked");
-        }
+        el.toggleAttribute("checked", getValue());
       },
       getValue: el => el.hasAttribute("checked"),
       html: (id, query) => {

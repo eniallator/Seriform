@@ -66,6 +66,14 @@ describe("SerialisableForm", () => {
     expect(seriform.extra).toBeUndefined();
   });
 
+  // --- extra getter ---
+  it("extra returns a custom value if set", () => {
+    const seriform = new SerialisableForm(makeParsers(), baseEl, {
+      query: "extra=extraVal",
+    });
+    expect(seriform.extra).toBe("extraVal");
+  });
+
   // --- addListener & tellListeners ---
   it("addListener and tellListeners notify listeners", () => {
     const cb = vi.fn();

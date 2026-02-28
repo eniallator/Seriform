@@ -1,9 +1,9 @@
-import { dom } from "niall-utils";
 import { isOneOf } from "deep-guards";
+import { dom } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
 
-import type { ValueConfig } from "../../types.ts";
+import type { ValueConfig } from "../config.ts";
 
 type SelectValue<A extends readonly [string, ...string[]]> = A[number];
 

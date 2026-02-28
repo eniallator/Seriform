@@ -1,15 +1,5 @@
 import type { Base64 } from "niall-utils";
 
-export interface Config {
-  label?: string;
-  title?: string;
-  attrs?: Record<string, string | number | null>;
-}
-
-export interface ValueConfig<T> extends Config {
-  default?: T;
-}
-
 export interface ContentParser {
   type: "Content";
   html: (id: string | null) => HTMLElement;
@@ -42,28 +32,8 @@ export type InitParser<P extends Parser<unknown>> = {
   ) => P;
 };
 
-export type AnyStringRecord = Record<string, unknown>;
-
-export type AnyParserRecord = Record<string, Parser<unknown>>;
-
-export type InitParserObject<O extends AnyStringRecord = AnyStringRecord> = {
+export type InitParserObject<
+  O extends Record<string, unknown> = Record<string, unknown>,
+> = {
   [K in keyof O]: InitParser<Parser<O[K]>>;
-};
-
-export type ValueParsers<O extends readonly unknown[]> = {
-  [K in keyof O]: ValueParser<O[K]>;
-};
-
-export type InitValueParsers<O extends readonly unknown[]> = {
-  [K in keyof O]: InitParser<ValueParser<O[K]>>;
-};
-
-export interface StateItem<T> {
-  parser: Parser<T>;
-  value: T;
-  el: HTMLElement;
-}
-
-export type State<R extends AnyStringRecord> = {
-  [K in keyof R]: StateItem<R[K]>;
 };

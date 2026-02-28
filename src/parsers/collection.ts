@@ -1,9 +1,18 @@
-import { dom, mapFilter, tuple, zip } from "niall-utils";
 import { isExact, isNumber, isString, isUnionOf } from "deep-guards";
+import { dom, mapFilter, tuple, zip } from "niall-utils";
 
 import { valueParser } from "../create.ts";
 
-import type { Config, InitValueParsers, ValueParsers } from "../types.ts";
+import type { InitParser, ValueParser } from "../types.ts";
+import type { Config } from "./config.ts";
+
+type ValueParsers<O extends readonly unknown[]> = {
+  [K in keyof O]: ValueParser<O[K]>;
+};
+
+type InitValueParsers<O extends readonly unknown[]> = {
+  [K in keyof O]: InitParser<ValueParser<O[K]>>;
+};
 
 type FieldValues = readonly [unknown, ...unknown[]];
 

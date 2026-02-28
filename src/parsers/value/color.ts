@@ -2,7 +2,7 @@ import { base64FromUint, base64ToUint, dom, isValidBase64 } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
 
-import type { ValueConfig } from "../../types.ts";
+import type { ValueConfig } from "../config.ts";
 
 export const colorParser = (cfg: ValueConfig<string>) => {
   const defaultValue = cfg.default ?? "000000";

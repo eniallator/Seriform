@@ -10,12 +10,17 @@ import {
 import { configItem, parseQuery, queryKey } from "./helpers.ts";
 
 import type { Base64, DiscriminatedOptions, Entry } from "niall-utils";
-import type {
-  AnyStringRecord,
-  InitParserObject,
-  State,
-  ValueParser,
-} from "./types.ts";
+import type { InitParserObject, Parser, ValueParser } from "./types.ts";
+
+interface StateItem<T> {
+  parser: Parser<T>;
+  value: T;
+  el: HTMLElement;
+}
+
+type State<R extends Record<string, unknown>> = {
+  [K in keyof R]: StateItem<R[K]>;
+};
 
 type SerialisableFormDiscriminatedOptions = DiscriminatedOptions<
   { query: string },
@@ -25,7 +30,7 @@ type SerialisableFormDiscriminatedOptions = DiscriminatedOptions<
 export type SerialisableFormOptions =
   SerialisableFormDiscriminatedOptions["external"];
 
-export class SerialisableForm<const R extends AnyStringRecord> {
+export class SerialisableForm<const R extends Record<string, unknown>> {
   private readonly hashLength: number | null;
   private readonly extraValue: string | undefined;
   private readonly state: State<R>;

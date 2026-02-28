@@ -1,12 +1,11 @@
 import type {
-  AnyStringRecord,
   ContentParser,
   InitParser,
   InitParserObject,
   ValueParser,
 } from "./types.ts";
 
-export const createParsers = <O extends AnyStringRecord>(
+export const createParsers = <O extends Record<string, unknown>>(
   parsers: InitParserObject<O>
 ) => parsers;
 

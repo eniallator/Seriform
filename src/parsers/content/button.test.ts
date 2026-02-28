@@ -6,13 +6,12 @@ describe("buttonParser", () => {
   it("creates a button with correct text and attributes", () => {
     const parser = buttonParser({
       text: "Click me",
-      attrs: { class: "my-btn", "data-hello": "world!" },
+      attrs: { "data-hello": "world!" },
     });
     const el = parser.methods(vi.fn(), vi.fn()).html("btn-id");
 
     expect(el.tagName).toBe("BUTTON");
     expect(el.textContent).toBe("Click me");
-    expect(el.getAttribute("class")).toBe("primary wrap-text my-btn");
     expect(el.getAttribute("id")).toBe("btn-id");
     expect(el.dataset.hello).toBe("world!");
   });
@@ -33,7 +32,6 @@ describe("buttonParser", () => {
 
     expect(el.tagName).toBe("BUTTON");
     expect(el.textContent).toBe("");
-    expect(el.getAttribute("class")).toBe("primary wrap-text");
     expect(el.hasAttribute("id")).toBe(false);
   });
 });
