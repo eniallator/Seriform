@@ -6,50 +6,56 @@ import type { ValueConfig } from "../config.ts";
 
 export const fileParser = (cfg: ValueConfig<string> & { text?: string }) => {
   const defaultValue = cfg.default ?? "";
-  let currentValue = defaultValue;
   return valueParser<string>(
-    (onChange, getValue, externalCfg) => ({
-      default: defaultValue,
-      serialise: () =>
-        getValue() !==
-        (externalCfg != null ? externalCfg.default : defaultValue)
-          ? currentValue
-          : null,
-      getValue: () => currentValue,
-      updateValue: () => {
-        currentValue = getValue();
-      },
-      html: (id, query) => {
-        const attrs = dom.toAttrs({
-          ...(id != null && { id }),
-          ...cfg.attrs,
-          style: "display: none;",
-        });
+    (onChange, getValue, externalCfg) => {
+      let currentValue = defaultValue;
 
-        const el = dom.toHtml(`
-          <div class="file">
-            <input type="file" ${attrs} />
-            <button>${cfg.text ?? ""}</button>
-          </div>
-        `);
+      return {
+        default: defaultValue,
+        serialise: () =>
+          getValue() !==
+          (externalCfg != null ? externalCfg.default : defaultValue)
+            ? currentValue
+            : null,
+        getValue: () => currentValue,
+        updateValue: () => {
+          currentValue = getValue();
+        },
+        html: (id, query) => {
+          const attrs = dom.toAttrs({
+            ...(id != null && { id }),
+            ...cfg.attrs,
+            style: "display: none;",
+          });
 
-        currentValue =
-          query ?? externalCfg?.initial ?? externalCfg?.default ?? defaultValue;
+          const el = dom.toHtml(`
+            <div class="file">
+              <input type="file" ${attrs} />
+              <button>${cfg.text ?? ""}</button>
+            </div>
+          `);
 
-        const inp = dom.get<HTMLInputElement>("input", el);
+          currentValue =
+            query ??
+            externalCfg?.initial ??
+            externalCfg?.default ??
+            defaultValue;
 
-        inp.onchange = async () => {
-          const contents = (await inp.files?.[0]?.text()) ?? null;
-          if (contents != null) onChange((currentValue = contents));
-        };
+          const inp = dom.get<HTMLInputElement>("input", el);
 
-        dom.get<HTMLButtonElement>("button", el).onclick = () => {
-          inp.click();
-        };
+          inp.onchange = async () => {
+            const contents = (await inp.files?.[0]?.text()) ?? null;
+            if (contents != null) onChange((currentValue = contents));
+          };
 
-        return el;
-      },
-    }),
+          dom.get<HTMLButtonElement>("button", el).onclick = () => {
+            inp.click();
+          };
+
+          return el;
+        },
+      };
+    },
     cfg.label,
     cfg.title
   );
