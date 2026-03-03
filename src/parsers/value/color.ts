@@ -8,10 +8,8 @@ export const colorParser = (cfg: ValueConfig<string>) => {
   const defaultValue = cfg.default ?? "000000";
   return valueParser<string>(
     (onChange, getValue, externalCfg) => ({
-      default: defaultValue,
       serialise: shortUrl =>
-        getValue() ===
-        (externalCfg != null ? externalCfg.default : defaultValue)
+        getValue() === (externalCfg?.default ?? defaultValue)
           ? null
           : shortUrl
             ? base64FromUint(Math.abs(Number.parseInt(getValue(), 16)))

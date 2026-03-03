@@ -5,13 +5,10 @@ import { valueParser } from "../../create.ts";
 import type { ValueConfig } from "../config.ts";
 
 export const textParser = (cfg: ValueConfig<string> & { area?: boolean }) => {
-  const defaultValue = cfg.default ?? "";
   return valueParser<string>(
     (onChange, getValue, externalCfg) => ({
-      default: defaultValue,
       serialise: () =>
-        getValue() !==
-        (externalCfg != null ? externalCfg.default : defaultValue)
+        getValue() !== (externalCfg?.default ?? cfg.default)
           ? getValue()
           : null,
       updateValue: el => {
@@ -20,7 +17,11 @@ export const textParser = (cfg: ValueConfig<string> & { area?: boolean }) => {
       getValue: el => (el as HTMLInputElement | HTMLTextAreaElement).value,
       html: (id, query) => {
         const initial =
-          query ?? externalCfg?.initial ?? externalCfg?.default ?? defaultValue;
+          query ??
+          externalCfg?.initial ??
+          externalCfg?.default ??
+          cfg.default ??
+          "";
 
         const attrs = dom.toAttrs({
           ...(id != null && { id }),

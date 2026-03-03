@@ -22,12 +22,11 @@ export const numToStr = (n: number) =>
 export const numberParser = (cfg: ValueConfig<number>) => {
   const defaultValue =
     cfg.default ?? (cfg.attrs != null ? defaultNumber(cfg.attrs) : 0);
+
   return valueParser<number>(
     (onChange, getValue, externalCfg) => ({
-      default: defaultValue,
       serialise: () =>
-        getValue() !==
-        (externalCfg != null ? externalCfg.default : defaultValue)
+        getValue() !== (externalCfg?.default ?? defaultValue)
           ? numToStr(getValue())
           : null,
       updateValue: el => {

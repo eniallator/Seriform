@@ -14,7 +14,6 @@ export const datetimeParser = (cfg: ValueConfig<Date>) => {
   const defaultValue = cfg.default ?? new Date(0);
   return valueParser<Date>(
     (onChange, getValue, externalCfg) => ({
-      default: defaultValue,
       serialise: shortUrl =>
         getValue().getTime() ===
         (externalCfg?.default.getTime() ?? defaultValue.getTime())

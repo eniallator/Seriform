@@ -11,10 +11,8 @@ export const fileParser = (cfg: ValueConfig<string> & { text?: string }) => {
       let currentValue = defaultValue;
 
       return {
-        default: defaultValue,
         serialise: () =>
-          getValue() !==
-          (externalCfg != null ? externalCfg.default : defaultValue)
+          getValue() !== (externalCfg?.default ?? defaultValue)
             ? currentValue
             : null,
         getValue: () => currentValue,

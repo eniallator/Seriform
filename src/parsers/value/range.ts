@@ -7,12 +7,11 @@ import type { ValueConfig } from "../config.ts";
 
 export const rangeParser = (cfg: ValueConfig<number>) => {
   const defaultValue = cfg.default ?? defaultNumber(cfg.attrs);
+
   return valueParser<number>(
     (onChange, getValue, externalCfg) => ({
-      default: defaultValue,
       serialise: () =>
-        getValue() !==
-        (externalCfg != null ? externalCfg.default : defaultValue)
+        getValue() !== (externalCfg?.default ?? defaultValue)
           ? numToStr(getValue())
           : null,
       updateValue: el => {

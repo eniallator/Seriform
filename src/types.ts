@@ -28,7 +28,7 @@ export type InitParser<P extends Parser<unknown>> = {
   methods: (
     onChange: (value: ParserValue<P>) => void,
     getValue: () => ParserValue<P>,
-    initial?: { initial: ParserValue<P> | null; default: ParserValue<P> }
+    externalCfg?: { initial: ParserValue<P> | null; default: ParserValue<P> }
   ) => P;
 };
 

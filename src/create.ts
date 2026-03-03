@@ -13,7 +13,7 @@ export const valueParser = <T>(
   init: (
     onChange: (value: T) => void,
     getValue: () => T,
-    initial?: { initial: T | null; default: T }
+    externalCfg?: { initial: T | null; default: T }
   ) => Omit<ValueParser<T>, "type">,
   label?: string,
   title?: string

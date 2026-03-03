@@ -1,10 +1,11 @@
 import { isExact, isNumber, isString, isUnionOf } from "deep-guards";
 import { dom, mapFilter, tuple, zip } from "niall-utils";
 
-import { valueParser } from "../create.ts";
+import { valueParser } from "../../create.ts";
 
-import type { InitParser, ValueParser } from "../types.ts";
-import type { Config } from "./config.ts";
+import type { InitParser, ValueParser } from "../../types.ts";
+import type { Config } from "../config.ts";
+import { formatField, splitQueryValues } from "./format.ts";
 
 type ValueParsers<O extends readonly unknown[]> = {
   [K in keyof O]: ValueParser<O[K]>;
@@ -16,7 +17,7 @@ type InitValueParsers<O extends readonly unknown[]> = {
 
 type FieldValues = readonly [unknown, ...unknown[]];
 
-const getRowValues = <const F extends FieldValues>(
+const getRowValues = <F extends FieldValues>(
   baseEl: Element,
   allParsers: ValueParsers<F>[],
   expandable: boolean
@@ -39,8 +40,8 @@ interface NewRowParams<F extends FieldValues> {
   shortUrl: boolean;
 }
 
-const createNewRow =
-  <const F extends FieldValues>(
+const newRowFactory =
+  <F extends FieldValues>(
     initParsers: InitValueParsers<F>,
     expandable: boolean
   ) =>
@@ -54,7 +55,7 @@ const createNewRow =
   }: NewRowParams<F>) => {
     const rowEl = dom.toHtml(
       `<tr>${
-        expandable ? '<td><input data-row-selector type="checkbox" /></td>' : ""
+        expandable ? '<td><input data-selector type="checkbox" /></td>' : ""
       }</tr>`
     );
 
@@ -79,63 +80,29 @@ const createNewRow =
     return tuple(rowEl, parsers);
   };
 
-interface CollectionConfig<F extends FieldValues> extends Config {
+interface TableConfig<F extends FieldValues> extends Config {
   expandable?: boolean;
   initialCollapsed?: boolean;
   fields: InitValueParsers<F>;
   default: NoInfer<F>[];
 }
 
-const formatField = (value: string | null): string =>
-  value?.replaceAll(/[,\\]/g, String.raw`\$&`) ?? "";
-
-const splitQueryValues = (query: string): (string | null)[] => {
-  const out: (string | null)[] = [];
-
-  let value: string = "";
-  let escaped = false;
-  for (const char of query) {
-    if (escaped) {
-      value += char;
-      escaped = false;
-    } else if (char === "\\") {
-      escaped = true;
-    } else if (char === ",") {
-      out.push(value.length > 0 ? value : null);
-      value = "";
-    } else {
-      value += char;
-    }
-  }
-
-  if (query.length > 0) {
-    out.push(value.length > 0 ? value : null);
-  }
-
-  return out;
-};
-
-export const collectionParser = <const F extends FieldValues>(
-  cfg: CollectionConfig<F>
+export const tableParser = <const F extends FieldValues>(
+  cfg: TableConfig<F>
 ) => {
   const { expandable = false } = cfg;
-  const isDefault = isExact(cfg.default);
-  const newRow = createNewRow(cfg.fields, expandable);
+  const newRow = newRowFactory(cfg.fields, expandable);
 
   const { class: passedClass, ...rest } = cfg.attrs ?? {};
-  const classValue = [
-    "collection",
-    cfg.initialCollapsed && "collapsed",
-    passedClass,
-  ]
+  const classValue = ["table", cfg.initialCollapsed && "collapsed", passedClass]
     .filter(isUnionOf(isString, isNumber))
     .join(" ");
 
-  return valueParser<F[]>((onChange, getValue) => {
+  return valueParser<F[]>((onChange, getValue, externalCfg) => {
+    const isDefault = isExact(externalCfg?.default ?? cfg.default);
     let fieldParsers: ValueParsers<F>[] = [];
 
     return {
-      default: cfg.default,
       serialise: shortUrl =>
         isDefault(getValue())
           ? null
@@ -150,10 +117,11 @@ export const collectionParser = <const F extends FieldValues>(
       updateValue: (el, shortUrl) => {
         const container = dom.get("tbody", el);
         container.innerHTML = "";
+
         fieldParsers = getValue()
-          .map((row, i) =>
+          .map((initialItems, i) =>
             newRow({
-              initialItems: row,
+              initialItems,
               itemDefaults: cfg.default[i],
               getValue: () => getValue()[i] as F,
               onChange: value => {
@@ -178,11 +146,11 @@ export const collectionParser = <const F extends FieldValues>(
         const baseEl = dom.toHtml(`
           <div ${attrs}>
             <a class="heading" href="javascript:return false"${when(cfg.title != null)(` title="${cfg.title}"`)}>
-              <span class="collection-label">${cfg.label ?? "Collection"}</span>
-              <span class="collection-caret"></span>
+              <span class="label">${cfg.label ?? ""}</span>
+              <span class="caret"></span>
             </a>
-            <div class="collection-container">
-              <div class="collection-content">
+            <div class="container">
+              <div class="content">
                 <table>
                   <thead>
                     <tr>
@@ -194,7 +162,7 @@ export const collectionParser = <const F extends FieldValues>(
                 </table>
               </div>
               ${when(expandable)(`
-                <div class="collection-actions">
+                <div class="actions">
                   <button type="button" data-action="delete">
                     <span class="width-large">Delete Selected</span>
                     <span class="width-narrow icon">
@@ -235,7 +203,7 @@ export const collectionParser = <const F extends FieldValues>(
           numQueryValues === cfg.default.length ||
           (expandable && queryValues.length > 0)
             ? queryValues
-            : cfg.default;
+            : (externalCfg?.initial ?? externalCfg?.default ?? cfg.default);
 
         fieldParsers = fieldValues.map((_, i) => {
           const [el, parsers] = newRow({
@@ -256,14 +224,12 @@ export const collectionParser = <const F extends FieldValues>(
         if (expandable) {
           dom.get("button[data-action=delete]", baseEl).onclick = () => {
             const newValue = mapFilter([...bodyEl.children], (el, i) => {
-              const values = getValue()[i] as F;
-              if (
-                dom.get<HTMLInputElement>("[data-row-selector]", el).checked
-              ) {
+              if (dom.get<HTMLInputElement>("[data-selector]", el).checked) {
                 el.remove();
                 return null;
               }
-              return values;
+
+              return getValue()[i] as F;
             });
 
             fieldParsers = newValue.map((initial, i) => {

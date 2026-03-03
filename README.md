@@ -44,6 +44,10 @@ seriform.addListener(values => {
 - **`createParsers<O>`**: Group parsers into a typed configuration object.
 - **`valueParser<T>`**: Create a value parser (text, number, range, etc.).
 - **`contentParser`**: Create non-editable content parsers (buttons, etc.).
+- **Collection Parsers**: Are just value parsers, however they work on arrays of values, not just a single value.
+  - **Dynamic rows:** Add and remove rows at runtime (when `expandable: true`, the UI shows `Add Row` and `Delete Selected` controls).
+  - **Serialization:** Encodes the collections as CSV-like queries with escaping for commas and backslashes.
+  - **State sync:** Items are kept in sync with internal state; adding/removing rows updates listeners.
 
 ### Available Value Parsers
 
@@ -58,19 +62,14 @@ seriform.addListener(values => {
 
 All parsers accept common options: `label`, `title`, `default`, and `attrs` for HTML attributes.
 
-### Available Content parsers
+### Available Content Parsers
 
 - **`buttonParser`**: Button elements that trigger actions without modifying state.
 
-### Collection parser
+### Available Collection Parsers
 
-- **`collectionParser`**: Manage arrays/tuples as dynamic rows. It renders a table where each row contains the configured field parsers and supports:
-  - **Dynamic rows:** Add and remove rows at runtime (when `expandable: true`, the UI shows `Add Row` and `Delete Selected` controls).
-  - **Multi-field rows:** Each row can combine different parser types (numbers, selects, colors, etc.).
-  - **Serialization:** Encodes the collection as a CSV-like query segment with escaping for commas and backslashes.
-  - **State sync:** Row values are kept in sync with internal state; adding/removing rows updates listeners.
-
-  Use `fields` to declare the parsers for each column and `default` to provide an initial set of rows.
+- **`tableParser`**: Uses a `table` element, where it has a `fields` attribute which is a tuple of parsers, one for each column of the table.
+- **`listParser`**: Uses a `ul` element, where it has a `field` attribute which is the parser to use for each list item.
 
 ## Type safety
 
@@ -177,7 +176,7 @@ yarn test
 ## Common use cases
 
 - **Shareable visual configs:** Create editors whose state is encoded in the URL.
-- **Data tables:** Use `collectionParser` for multi-field row management.
+- **Data tables:** Use `tableParser` for multi-field row management.
 - **Persisted preferences:** Serialize state to URL.
 
 ## API reference

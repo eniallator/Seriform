@@ -11,14 +11,12 @@ export const selectParser = <const A extends readonly [string, ...string[]]>(
   cfg: ValueConfig<SelectValue<A>> & { options: A }
 ) => {
   const isOption = isOneOf(...cfg.options);
-  const defaultValue = cfg.default ?? (cfg.options[0] as SelectValue<A>);
+  const defaultValue = cfg.default ?? cfg.options[0];
 
   return valueParser<SelectValue<A>>(
     (onChange, getValue, externalCfg) => ({
-      default: defaultValue,
       serialise: () =>
-        getValue() !==
-        (externalCfg != null ? externalCfg.default : defaultValue)
+        getValue() !== (externalCfg?.default ?? defaultValue)
           ? getValue()
           : null,
       updateValue: el => {

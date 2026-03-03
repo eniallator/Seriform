@@ -6,7 +6,7 @@ export const configItem = (
   id: string,
   el: HTMLElement,
   label?: string,
-  title: string | undefined = label
+  title?: string
 ): HTMLDivElement => {
   const itemEl = dom.toHtml(`
     <div class="config-item"${title ? ` title="${title}"` : ""}>

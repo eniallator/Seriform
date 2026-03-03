@@ -9,10 +9,8 @@ export const checkboxParser = (cfg: ValueConfig<boolean>) => {
   const defaultValue = cfg.default ?? false;
   return valueParser<boolean>(
     (onChange, getValue, externalCfg) => ({
-      default: defaultValue,
       serialise: shortUrl =>
-        getValue() !==
-        (externalCfg != null ? externalCfg.default : defaultValue)
+        getValue() !== (externalCfg?.default ?? defaultValue)
           ? `${shortUrl ? +getValue() : getValue()}`
           : null,
       updateValue: el => {

@@ -80,7 +80,7 @@ The project is organized into logical modules:
 
 - **`src/parsers/content`** - Content parsers that come out-of-the-box
 - **`src/parsers/value`** - Value parsers that come out-of-the-box
-- **`src/parsers/collection.ts`** - The collection parser
+- **`src/parsers/collection`** - Collection parsers that come out-of-the-box
 - **`src/serialisableForm.ts`** - The main SerialisableForm handling class
 - **`src/create.ts`** - Typed creation helpers
 - **`src/helpers.ts`** - Internal helper methods

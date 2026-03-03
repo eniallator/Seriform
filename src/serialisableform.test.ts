@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { SerialisableForm } from "./serialisableform.ts";
+import { SerialisableForm } from "./serialisableForm.ts";
 import { contentParser, createParsers, valueParser } from "./create.ts";
 
 import type { InitParserObject } from "./types.ts";
