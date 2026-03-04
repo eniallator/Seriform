@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { SerialisableForm } from "./serialisableForm.ts";
+import { SeriForm } from "./seriForm.ts";
 import { contentParser, createParsers, valueParser } from "./create.ts";
 
 import type { InitParserObject } from "./types.ts";
@@ -27,13 +27,13 @@ const makeParsers = () =>
 type TestParserValues =
   ReturnType<typeof makeParsers> extends InitParserObject<infer T> ? T : never;
 
-describe("SerialisableForm", () => {
+describe("SeriForm", () => {
   let baseEl: HTMLElement;
-  let seriform: SerialisableForm<TestParserValues>;
+  let seriform: SeriForm<TestParserValues>;
 
   beforeEach(() => {
     baseEl = document.createElement("div");
-    seriform = new SerialisableForm(makeParsers(), baseEl, {
+    seriform = new SeriForm(makeParsers(), baseEl, {
       query: location.search,
     });
   });

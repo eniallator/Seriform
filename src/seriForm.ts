@@ -22,15 +22,14 @@ type State<R extends Record<string, unknown>> = {
   [K in keyof R]: StateItem<R[K]>;
 };
 
-type SerialisableFormDiscriminatedOptions = DiscriminatedOptions<
+type SeriFormDiscriminatedOptions = DiscriminatedOptions<
   { query: string },
   { shortUrl?: false } | { shortUrl: true; hashLength?: number }
 >;
 
-export type SerialisableFormOptions =
-  SerialisableFormDiscriminatedOptions["external"];
+export type SeriFormOptions = SeriFormDiscriminatedOptions["external"];
 
-export class SerialisableForm<const R extends Record<string, unknown>> {
+export class SeriForm<const R extends Record<string, unknown>> {
   private readonly hashLength: number | null;
   private readonly state: State<R>;
   private readonly listeners: {
@@ -41,7 +40,7 @@ export class SerialisableForm<const R extends Record<string, unknown>> {
   constructor(
     initParsers: InitParserObject<R>,
     baseEl: HTMLElement,
-    options: SerialisableFormDiscriminatedOptions["internal"]
+    options: SeriFormDiscriminatedOptions["internal"]
   ) {
     const { query, shortUrl, hashLength } = options;
     this.hashLength = shortUrl ? (hashLength ?? 6) : null;

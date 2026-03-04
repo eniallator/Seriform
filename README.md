@@ -9,12 +9,7 @@ The library has some standard parsers available, however since they are self-con
 ## Quick Example
 
 ```typescript
-import {
-  SerialisableForm,
-  createParsers,
-  numberParser,
-  rangeParser,
-} from "seriform";
+import { SeriForm, createParsers, numberParser, rangeParser } from "seriform";
 
 const config = createParsers({
   speed: numberParser({
@@ -30,7 +25,7 @@ const config = createParsers({
 });
 
 const baseEl = document.getElementById("config-ui") as HTMLElement;
-const seriform = new SerialisableForm(config, baseEl, {
+const seriform = new SeriForm(config, baseEl, {
   query: location.search,
   shortUrl: true,
 });
@@ -42,7 +37,7 @@ seriform.addListener(values => {
 
 ## API Summary
 
-- **`SerialisableForm`**: Manages state, DOM, listeners, and URL sync.
+- **`SeriForm`**: Manages state, DOM, listeners, and URL sync.
 - **`createParsers<O>`**: Group parsers into a typed configuration object.
 - **`valueParser<T>`**: Create a value parser (text, number, range, etc.).
 - **`contentParser`**: Create non-editable content parsers (buttons, etc.).
@@ -75,8 +70,8 @@ All parsers accept common options: `label`, `title`, `default`, and `attrs` for 
 
 ## Type safety
 
-- **createParsers** The `createParsers` factory returns an object whose shape is reflected in the TypeScript types used by `SerialisableForm` and listeners. Use `InitParserObject` and `ParserValue` types to extract and reuse inferred shapes in your codebase.
-- **Polymorphic State Interaction** `SerialisableForm.getValue(id)` lets you retrieve the value of a given input, typed to that input's value.
+- **createParsers** The `createParsers` factory returns an object whose shape is reflected in the TypeScript types used by `SeriForm` and listeners. Use `InitParserObject` and `ParserValue` types to extract and reuse inferred shapes in your codebase.
+- **Polymorphic State Interaction** `SeriForm.getValue(id)` lets you retrieve the value of a given input, typed to that input's value.
 
 Example:
 
@@ -87,7 +82,7 @@ const config = createParsers({
 });
 
 const baseEl = document.getElementById("shareable-form");
-const seriform = new SerialisableForm(config, baseEl, {
+const seriform = new SeriForm(config, baseEl, {
   query: location.search,
 });
 
@@ -183,12 +178,12 @@ yarn test
 
 ## API reference
 
-- **`SerialisableForm.getValue(id)`**: gets a specific parser's value.
-- **`SerialisableForm.getAllValues()`**: gets a record of type `Record<id, value>` of all the parsers.
-- **`SerialisableForm.setValue(id, value)`**: sets a specific parser's value.
-- **`SerialisableForm.addListener(callback, subscriptions?)`**: Register change listeners.
-- **`SerialisableForm.tellListeners(id?)`**: calls each listener, optionally filtering based on an id parameter in their subscriptions.
-- **`SerialisableForm.serialiseToUrlParams()`**: Return current config as a URL query string segment.
-- **`SerialisableForm.addCopyToClipboardHandler(selector)`**: Add a share button.
+- **`SeriForm.getValue(id)`**: gets a specific parser's value.
+- **`SeriForm.getAllValues()`**: gets a record of type `Record<id, value>` of all the parsers.
+- **`SeriForm.setValue(id, value)`**: sets a specific parser's value.
+- **`SeriForm.addListener(callback, subscriptions?)`**: Register change listeners.
+- **`SeriForm.tellListeners(id?)`**: calls each listener, optionally filtering based on an id parameter in their subscriptions.
+- **`SeriForm.serialiseToUrlParams()`**: Return current config as a URL query string segment.
+- **`SeriForm.addCopyToClipboardHandler(selector)`**: Add a share button.
 
 For implementation details and source, see the package `src/` files and parser implementations under `src/parsers/`.

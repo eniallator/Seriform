@@ -81,7 +81,7 @@ The project is organized into logical modules:
 - **`src/parsers/content`** - Content parsers that come out-of-the-box
 - **`src/parsers/value`** - Value parsers that come out-of-the-box
 - **`src/parsers/collection`** - Collection parsers that come out-of-the-box
-- **`src/serialisableForm.ts`** - The main SerialisableForm handling class
+- **`src/seriForm.ts`** - The main SeriForm handling class
 - **`src/create.ts`** - Typed creation helpers
 - **`src/helpers.ts`** - Internal helper methods
 - **`src/types.ts`** - Common types used for the library
