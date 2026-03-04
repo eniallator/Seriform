@@ -61,19 +61,6 @@ describe("SerialisableForm", () => {
     expect(seriform.getValue("bar")).toBe(null);
   });
 
-  // --- extra getter ---
-  it("extra returns undefined if not set", () => {
-    expect(seriform.extra).toBeUndefined();
-  });
-
-  // --- extra getter ---
-  it("extra returns a custom value if set", () => {
-    const seriform = new SerialisableForm(makeParsers(), baseEl, {
-      query: "extra=extraVal",
-    });
-    expect(seriform.extra).toBe("extraVal");
-  });
-
   // --- addListener & tellListeners ---
   it("addListener and tellListeners notify listeners", () => {
     const cb = vi.fn();
@@ -106,8 +93,8 @@ describe("SerialisableForm", () => {
 
   // --- serialiseToUrlParams ---
   it("serialiseToUrlParams returns correct string", () => {
-    const result = seriform.serialiseToUrlParams("extraVal");
-    expect(result).toBe("foo=serialised&extra=extraVal");
+    const result = seriform.serialiseToUrlParams();
+    expect(result).toBe("foo=serialised");
   });
 
   it("serialiseToUrlParams handles no extra", () => {

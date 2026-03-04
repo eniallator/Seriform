@@ -1,8 +1,10 @@
 # Seriform
 
 This package focuses on serialising forms, hence the name Seriform. It lets you define data driven forms, with full typescript support.\
-The motivation behind this was to create a light-weight, non-framework dependant form to URL parsing library. I use this to create projects where I need to be able to share filled in forms, to create share links.\
-This library uses Parsers as it's building blocks, which are entirely self-contained building blocks which define things like serialisation/deserialisation/HTML Elements/interactivity.
+The motivation behind this was to create a light-weight, non-framework dependant form to URL parsing library. I use this to create projects where I need to be able to share filled in forms, to create share links.
+
+This library uses Parsers as it's building blocks, which are entirely self-contained building blocks which define things like serialisation/deserialisation/HTML Elements/interactivity.\
+The library has some standard parsers available, however since they are self-contained, it is easy to make custom parsers.
 
 ## Quick Example
 
@@ -186,7 +188,7 @@ yarn test
 - **`SerialisableForm.setValue(id, value)`**: sets a specific parser's value.
 - **`SerialisableForm.addListener(callback, subscriptions?)`**: Register change listeners.
 - **`SerialisableForm.tellListeners(id?)`**: calls each listener, optionally filtering based on an id parameter in their subscriptions.
-- **`SerialisableForm.serialiseToUrlParams(extra?)`**: Return current config as a URL query string segment.
-- **`SerialisableForm.addCopyToClipboardHandler(selector, extra?)`**: Add a share button.
+- **`SerialisableForm.serialiseToUrlParams()`**: Return current config as a URL query string segment.
+- **`SerialisableForm.addCopyToClipboardHandler(selector)`**: Add a share button.
 
 For implementation details and source, see the package `src/` files and parser implementations under `src/parsers/`.

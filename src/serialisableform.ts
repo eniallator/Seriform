@@ -32,7 +32,6 @@ export type SerialisableFormOptions =
 
 export class SerialisableForm<const R extends Record<string, unknown>> {
   private readonly hashLength: number | null;
-  private readonly extraValue: string | undefined;
   private readonly state: State<R>;
   private readonly listeners: {
     callback: (values: R, updatedId?: keyof R) => void;
@@ -48,7 +47,6 @@ export class SerialisableForm<const R extends Record<string, unknown>> {
     this.hashLength = shortUrl ? (hashLength ?? 6) : null;
 
     const initialValues = parseQuery(query, this.hashLength);
-    this.extraValue = initialValues[queryKey("extra", this.hashLength)];
 
     this.state = mapObject(initParsers, ([id, initParser]): Entry<State<R>> => {
       const { label, title, methods } = initParser;
@@ -89,10 +87,6 @@ export class SerialisableForm<const R extends Record<string, unknown>> {
     }
   }
 
-  get extra() {
-    return this.extraValue;
-  }
-
   addListener(
     callback: (values: R, updatedId?: keyof R) => void,
     subscriptions: (keyof R)[] = []
@@ -108,7 +102,7 @@ export class SerialisableForm<const R extends Record<string, unknown>> {
     });
   }
 
-  serialiseToUrlParams(extra?: string): string {
+  serialiseToUrlParams(): string {
     const urlPart = (key: string, value: string | Base64): string =>
       [queryKey(key, this.hashLength), encodeURIComponent(value)].join(
         this.hashLength != null ? "" : "="
@@ -119,19 +113,12 @@ export class SerialisableForm<const R extends Record<string, unknown>> {
         .guard((p): p is ValueParser<R[keyof R]> => p.type === "Value")
         .map(p => p.serialise(this.hashLength != null))
         .map(serialised => urlPart(id as string, serialised))
-    )
-      .concat(...(extra != null ? [urlPart("extra", extra)] : []))
-      .join("&");
+    ).join("&");
   }
 
-  addCopyToClipboardHandler(
-    selector: string,
-    extra?: ((state: R) => string) | string
-  ) {
+  addCopyToClipboardHandler(selector: string) {
     dom.addListener(dom.get(selector), "click", () => {
-      const query = this.serialiseToUrlParams(
-        typeof extra === "function" ? extra(this.getAllValues()) : extra
-      );
+      const query = this.serialiseToUrlParams();
       const { protocol, host, pathname } = location;
       const shareUrl = `${protocol}//${host}${pathname}${
         query.length > 0 ? "?" + query : ""
