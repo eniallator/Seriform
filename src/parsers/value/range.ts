@@ -1,9 +1,8 @@
 import { dom } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
-import { defaultNumber, numToStr } from "./number.ts";
-
 import type { ValueConfig } from "../config.ts";
+import { defaultNumber, numToStr } from "./number.ts";
 
 export const rangeParser = (cfg: ValueConfig<number>) => {
   const defaultValue = cfg.default ?? defaultNumber(cfg.attrs);
@@ -11,13 +10,13 @@ export const rangeParser = (cfg: ValueConfig<number>) => {
   return valueParser<number>(
     (onChange, getValue, externalCfg) => ({
       serialise: () =>
-        getValue() !== (externalCfg?.default ?? defaultValue)
-          ? numToStr(getValue())
-          : null,
+        getValue() === (externalCfg?.default ?? defaultValue)
+          ? null
+          : numToStr(getValue()),
+      getValue: el => Number((el as HTMLInputElement).value),
       updateValue: el => {
         (el as HTMLInputElement).value = `${getValue()}`;
       },
-      getValue: el => Number((el as HTMLInputElement).value),
       html: (id, query) => {
         const initial =
           query != null

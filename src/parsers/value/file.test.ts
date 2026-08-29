@@ -1,7 +1,7 @@
-import { describe, expect, it, test, vi } from "vitest";
+import { raise } from "niall-utils";
+import { describe, expect, it, vi } from "vitest";
 
 import { fileParser } from "./file.ts";
-import { raise } from "niall-utils";
 
 describe("fileParser", () => {
   const valueA = "foo";
@@ -63,7 +63,19 @@ describe("fileParser", () => {
       vi.fn(),
       vi.fn(() => valueA)
     );
-    expect(parser.serialise(true)).toBe(null);
+
+    expect(parser.serialise(true)).toBeNull();
+  });
+
+  it("serialise returns the current value when it differs from default", () => {
+    const parser = fileParser({}).methods(
+      vi.fn(),
+      vi.fn(() => valueA)
+    );
+
+    parser.html(null, valueA, false);
+
+    expect(parser.serialise(false)).toBe(valueA);
   });
 
   it("updateValue sets the value", () => {
@@ -77,9 +89,7 @@ describe("fileParser", () => {
     expect(parser.getValue(el)).toBe(valueA);
   });
 
-  test.skip("html sets up onchange handler", ctx => {
-    ctx.skip("Can't mock the inputEl.files property");
-
+  it("html sets up onchange handler", async () => {
     const onChange = vi.fn();
     const parser = fileParser({}).methods(onChange, vi.fn());
 
@@ -87,15 +97,38 @@ describe("fileParser", () => {
       parser.html(null, null, true).querySelector("input") ??
       raise(new Error("No input found in file html"));
 
-    // el.files = [
-    //   new File([valueA], "test.txt", { type: "text/plain" }),
-    // ] as FileList;
-    const files = Object.create(el.files) as FileList;
-    files[0] = new File([valueA], "test.txt", { type: "text/plain" });
-    el.files = files;
+    el.files = [
+      new File([valueA], "test.txt", { type: "text/plain" }),
+    ] as unknown as FileList;
 
-    el.onchange?.({} as Event);
+    await el.onchange?.({} as Event);
 
     expect(onChange).toHaveBeenCalledWith(valueA);
+  });
+
+  it("onchange handler does nothing when no file is selected", async () => {
+    const onChange = vi.fn();
+    const parser = fileParser({}).methods(onChange, vi.fn());
+
+    const el =
+      parser.html(null, null, true).querySelector("input") ??
+      raise(new Error("No input found in file html"));
+
+    await el.onchange?.({} as Event);
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("clicking the button clicks the hidden file input", () => {
+    const parser = fileParser({}).methods(vi.fn(), vi.fn());
+    const el = parser.html(null, null, false);
+
+    const input =
+      el.querySelector("input") ?? raise(new Error("No input found"));
+    const clickSpy = vi.spyOn(input, "click");
+
+    (el.querySelector("button") ?? raise(new Error("No button found"))).click();
+
+    expect(clickSpy).toHaveBeenCalled();
   });
 });

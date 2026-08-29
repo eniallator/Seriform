@@ -7,11 +7,11 @@ import {
 } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
-
 import type { ValueConfig } from "../config.ts";
 
 export const datetimeParser = (cfg: ValueConfig<Date>) => {
   const defaultValue = cfg.default ?? new Date(0);
+
   return valueParser<Date>(
     (onChange, getValue, externalCfg) => ({
       serialise: shortUrl =>
@@ -21,10 +21,10 @@ export const datetimeParser = (cfg: ValueConfig<Date>) => {
           : shortUrl
             ? base64FromUint(getValue().getTime())
             : getValue().toISOString(),
+      getValue: el => new Date((el as HTMLInputElement).value),
       updateValue: el => {
         (el as HTMLInputElement).value = formatLocaleDate(getValue());
       },
-      getValue: el => new Date((el as HTMLInputElement).value),
       html: (id, query, shortUrl) => {
         const initial =
           query != null

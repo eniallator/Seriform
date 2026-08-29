@@ -9,7 +9,7 @@ The library has some standard parsers available, however since they are self-con
 ## Quick Example
 
 ```typescript
-import { SeriForm, createParsers, numberParser, rangeParser } from "seriform";
+import { createParsers, numberParser, rangeParser, SeriForm } from "seriform";
 
 const config = createParsers({
   speed: numberParser({
@@ -166,8 +166,8 @@ const infoButton = contentParser((id, onChange) => {
 - Parser unit tests and config/state tests live alongside source files as `.test.ts` files. Run:
 
 ```bash
-yarn typecheck
-yarn test
+pnpm typecheck
+pnpm test
 ```
 
 ## Common use cases

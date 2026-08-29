@@ -20,6 +20,17 @@ describe("textParser", () => {
     expect(el.dataset.hello).toBe("world!");
   });
 
+  it("creates a textarea when area is true", () => {
+    const parser = textParser({ default: valueA, area: true }).methods(
+      vi.fn(),
+      vi.fn()
+    );
+
+    const el = parser.html(null, null, false);
+    expect(el.tagName).toBe("TEXTAREA");
+    expect(el.textContent).toBe(valueA);
+  });
+
   it("initial state is expected", () => {
     expect(
       (
@@ -87,7 +98,7 @@ describe("textParser", () => {
       vi.fn(() => valueA)
     );
 
-    expect(parser.serialise(false)).toBe(null);
+    expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {

@@ -5,11 +5,12 @@ import {
   Option,
   tuple,
   typedToEntries,
+  type Base64,
+  type Entry,
+  type UnionToPartial,
 } from "niall-utils";
 
 import { configItem, parseQuery, queryKey } from "./helpers.ts";
-
-import type { Base64, DiscriminatedOptions, Entry } from "niall-utils";
 import type { InitParserObject, Parser, ValueParser } from "./types.ts";
 
 interface StateItem<T> {
@@ -22,12 +23,14 @@ type State<R extends Record<string, unknown>> = {
   [K in keyof R]: StateItem<R[K]>;
 };
 
-type SeriFormDiscriminatedOptions = DiscriminatedOptions<
-  { query: string },
-  { shortUrl?: false } | { shortUrl: true; hashLength?: number }
->;
+type SeriFormShortUrlOptions =
+  { shortUrl?: false } | { shortUrl: true; hashLength?: number };
 
-export type SeriFormOptions = SeriFormDiscriminatedOptions["external"];
+export type SeriFormOptions = { query: string } & SeriFormShortUrlOptions;
+
+type SeriFormInternalOptions = {
+  query: string;
+} & UnionToPartial<SeriFormShortUrlOptions>;
 
 export class SeriForm<const R extends Record<string, unknown>> {
   private readonly hashLength: number | null;
@@ -40,7 +43,7 @@ export class SeriForm<const R extends Record<string, unknown>> {
   constructor(
     initParsers: InitParserObject<R>,
     baseEl: HTMLElement,
-    options: SeriFormDiscriminatedOptions["internal"]
+    options: SeriFormInternalOptions
   ) {
     const { query, shortUrl, hashLength } = options;
     this.hashLength = shortUrl ? (hashLength ?? 6) : null;

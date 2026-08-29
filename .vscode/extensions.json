@@ -1,7 +1,7 @@
 {
   "recommendations": [
-    "arcanis.vscode-zipfs",
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode"
+    "oxc.oxc-vscode",
+    "esbenp.prettier-vscode",
+    "ms-vscode.remote-containers"
   ]
 }

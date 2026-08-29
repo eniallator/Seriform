@@ -11,10 +11,27 @@ Please review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all int
 ### Prerequisites
 
 - Node.js 25.4.0 or higher
-- Yarn 4.12.0 or higher
+- pnpm (managed via Corepack — see `packageManager` in `package.json`)
 - Basic familiarity with TypeScript and runtime type checking concepts
 
 ### Setting Up Your Development Environment
+
+#### Using Dev Containers (recommended)
+
+Open this repository in VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-containers) extension installed. To get started quickly, copy the provided example devcontainer into your local config and customize it as needed.
+
+1. Copy the example file into place:
+
+   ```bash
+   cp .devcontainer/devcontainer.example.json .devcontainer/devcontainer.json
+   ```
+
+2. Edit `.devcontainer/devcontainer.json` to add any personal VS Code extensions, settings, or environment tweaks you need. Treat this file as local and do not commit it.
+3. Rebuild the container with `Dev Containers: Rebuild Container` (or `Reopen in Container`) in VS Code.
+
+> **Important:** If you change your local `.devcontainer/devcontainer.json`, rebuild the container for changes to take effect.
+
+#### Manually
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
@@ -27,7 +44,7 @@ Please review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all int
 3. **Install dependencies**:
 
    ```bash
-   yarn
+   pnpm install
    ```
 
 ## Development Workflow
@@ -35,7 +52,7 @@ Please review and adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all int
 ### Building the Project
 
 ```bash
-yarn build
+pnpm build
 ```
 
 This compiles the TypeScript source to JavaScript in the `dist/` directory.
@@ -43,7 +60,7 @@ This compiles the TypeScript source to JavaScript in the `dist/` directory.
 ### Running Tests
 
 ```bash
-yarn test
+pnpm test
 ```
 
 Tests are written using Vitest. Please ensure all tests pass before submitting a pull request.
@@ -51,25 +68,37 @@ Tests are written using Vitest. Please ensure all tests pass before submitting a
 ### Type Checking
 
 ```bash
-yarn typecheck
+pnpm typecheck
 ```
 
-Verify there are no TypeScript compilation errors (tests are allowed).
+Verify there are no TypeScript compilation errors, checking both source (`tsconfig.json`) and test files
+(`tsconfig.test.json`).
 
 ### Linting
 
 ```bash
-yarn lint
+pnpm lint
 ```
 
-The project uses ESLint with TypeScript support. Address all linting issues in your changes.
+The project uses [oxlint](https://oxc.rs/docs/guide/usage/linter.html) with type-aware TypeScript rules
+(see `.oxlintrc.json`). Address all linting issues in your changes.
+
+### Formatting
+
+```bash
+pnpm format        # writes formatting fixes, including organizing imports
+pnpm format:check  # verifies formatting without writing (used in CI)
+```
+
+The project uses Prettier, plus `@ianvs/prettier-plugin-sort-imports` to sort/dedupe imports on format.
 
 ### Finding Issues
 
-The previous two steps can be combined into one, by using the following command (runs typecheck and then lint)
+The previous steps can be combined into one, by using the following command (runs typecheck, lint, and a
+format check)
 
 ```bash
-yarn findissues
+pnpm findissues
 ```
 
 ## Making Changes
@@ -100,7 +129,9 @@ Follow these guidelines when contributing:
 
 - **Write tests** for any new functionality or bug fixes
 - **Update existing tests** if you change behavior
-- **Keep test coverage high** — aim for comprehensive coverage of guard functions
+- **100% coverage is enforced** — statements, branches, functions, and lines, evaluated per file (see
+  `vitest.config.js`). A new file needs full coverage on its own, not just in aggregate; this includes error
+  paths reachable only by bypassing compile-time type gates (e.g. via a cast)
 - Test files follow the pattern `*.test.ts` and use Vitest syntax
 
 Example test structure:
@@ -190,14 +221,15 @@ Closes #45
    - Related issues
 
 4. **Ensure all checks pass**:
-   - Tests pass (`yarn test`)
-   - Type checking passes (`yarn typecheck`)
-   - Linting passes (`yarn lint`)
+   - Tests pass (`pnpm test`)
+   - Type checking passes (`pnpm typecheck`)
+   - Linting passes (`pnpm lint`)
+   - Formatting is clean (`pnpm format:check`)
 
 Before submitting, run:
 
 ```bash
-yarn prepublish
+pnpm prepublish
 ```
 
 This runs the same checks that will run before publishing.

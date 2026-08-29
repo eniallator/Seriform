@@ -1,27 +1,24 @@
 import { dom } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
-
 import type { ValueConfig } from "../config.ts";
 
 export const textParser = (cfg: ValueConfig<string> & { area?: boolean }) => {
+  const defaultValue = cfg.default ?? "";
+
   return valueParser<string>(
     (onChange, getValue, externalCfg) => ({
       serialise: () =>
-        getValue() !== (externalCfg?.default ?? cfg.default)
-          ? getValue()
-          : null,
+        getValue() === (externalCfg?.default ?? defaultValue)
+          ? null
+          : getValue(),
+      getValue: el => (el as HTMLInputElement | HTMLTextAreaElement).value,
       updateValue: el => {
         (el as HTMLInputElement | HTMLTextAreaElement).value = getValue();
       },
-      getValue: el => (el as HTMLInputElement | HTMLTextAreaElement).value,
       html: (id, query) => {
         const initial =
-          query ??
-          externalCfg?.initial ??
-          externalCfg?.default ??
-          cfg.default ??
-          "";
+          query ?? externalCfg?.initial ?? externalCfg?.default ?? defaultValue;
 
         const attrs = dom.toAttrs({
           ...(id != null && { id }),

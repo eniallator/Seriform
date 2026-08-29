@@ -1,11 +1,11 @@
 import { base64FromUint, base64ToUint, dom, isValidBase64 } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
-
 import type { ValueConfig } from "../config.ts";
 
 export const colorParser = (cfg: ValueConfig<string>) => {
   const defaultValue = cfg.default ?? "000000";
+
   return valueParser<string>(
     (onChange, getValue, externalCfg) => ({
       serialise: shortUrl =>
@@ -14,10 +14,10 @@ export const colorParser = (cfg: ValueConfig<string>) => {
           : shortUrl
             ? base64FromUint(Math.abs(Number.parseInt(getValue(), 16)))
             : getValue(),
+      getValue: el => (el as HTMLInputElement).value.slice(1).toLowerCase(),
       updateValue: el => {
         (el as HTMLInputElement).value = `#${getValue()}`;
       },
-      getValue: el => (el as HTMLInputElement).value.slice(1).toLowerCase(),
       html: (id, query, shortUrl) => {
         const initial =
           query != null

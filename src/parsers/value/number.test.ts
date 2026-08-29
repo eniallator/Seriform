@@ -60,6 +60,14 @@ describe("numberParser", () => {
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe("0");
+
+    expect(
+      (
+        numberParser({ attrs: { min: "0", max: "100", step: "25" } })
+          .methods(vi.fn(), vi.fn())
+          .html(null, null, false) as HTMLInputElement
+      ).value
+    ).toBe("100");
   });
 
   it("serialise returns correct value for shortUrl", () => {
@@ -70,6 +78,13 @@ describe("numberParser", () => {
 
     expect(parser.serialise(true)).toBe(`${valueAShort}`);
     expect(parser.serialise(false)).toBe(`${valueA}`);
+
+    const exponentialParser = numberParser({}).methods(
+      vi.fn(),
+      vi.fn(() => 100000000)
+    );
+
+    expect(exponentialParser.serialise(false)).toBe("1e%2B8");
   });
 
   it("html deserialises shortUrl properly", () => {
@@ -89,7 +104,7 @@ describe("numberParser", () => {
       vi.fn(() => valueA)
     );
 
-    expect(parser.serialise(false)).toBe(null);
+    expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {

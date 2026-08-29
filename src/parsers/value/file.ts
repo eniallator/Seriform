@@ -1,20 +1,20 @@
 import { dom } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
-
 import type { ValueConfig } from "../config.ts";
 
 export const fileParser = (cfg: ValueConfig<string> & { text?: string }) => {
   const defaultValue = cfg.default ?? "";
+
   return valueParser<string>(
     (onChange, getValue, externalCfg) => {
       let currentValue = defaultValue;
 
       return {
         serialise: () =>
-          getValue() !== (externalCfg?.default ?? defaultValue)
-            ? currentValue
-            : null,
+          getValue() === (externalCfg?.default ?? defaultValue)
+            ? null
+            : currentValue,
         getValue: () => currentValue,
         updateValue: () => {
           currentValue = getValue();

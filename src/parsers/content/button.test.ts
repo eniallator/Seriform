@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { buttonParser } from "./button";
+import { buttonParser } from "./button.ts";
 
 describe("buttonParser", () => {
   it("creates a button with correct text and attributes", () => {
     const parser = buttonParser({
       text: "Click me",
+      title: "A helpful hint",
       attrs: { "data-hello": "world!" },
     });
     const el = parser.methods(vi.fn(), vi.fn()).html("btn-id");
@@ -13,6 +14,7 @@ describe("buttonParser", () => {
     expect(el.tagName).toBe("BUTTON");
     expect(el.textContent).toBe("Click me");
     expect(el.getAttribute("id")).toBe("btn-id");
+    expect(el.getAttribute("title")).toBe("A helpful hint");
     expect(el.dataset.hello).toBe("world!");
   });
 

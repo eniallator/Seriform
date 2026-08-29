@@ -5,6 +5,6 @@
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": "dist",
-    "sourceRoot": "src"
+    "rootDir": "src"
   }
 }

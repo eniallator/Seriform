@@ -89,7 +89,7 @@ describe("rangeParser", () => {
       vi.fn(() => valueA)
     );
 
-    expect(parser.serialise(false)).toBe(null);
+    expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {

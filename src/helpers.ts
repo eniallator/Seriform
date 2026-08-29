@@ -1,6 +1,4 @@
-import { base64FromUint, dom } from "niall-utils";
-
-import type { Base64 } from "niall-utils";
+import { base64FromUint, dom, type Base64, type FillTuple } from "niall-utils";
 
 export const configItem = (
   id: string,
@@ -22,7 +20,7 @@ export const configItem = (
 const hashString = (str: string): number => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + (str.codePointAt(i) ?? 0);
+    hash = (hash << 5) - hash + (str.codePointAt(i) as number);
     hash &= hash; // Convert to 32bit integer
   }
   return hash;
@@ -48,10 +46,8 @@ export const parseQuery = (
   const queryEntries: [string, string][] = [];
   let tokens: ReturnType<RegExp["exec"]>;
   while ((tokens = queryRegex.exec(query)) != null) {
-    const [_, key, value] = tokens;
-    if (key != null && value != null) {
-      queryEntries.push([key, decodeURIComponent(value)]);
-    }
+    const [_, key, value] = tokens as unknown as FillTuple<string, 3>;
+    queryEntries.push([key, decodeURIComponent(value)]);
   }
 
   return Object.fromEntries(queryEntries);

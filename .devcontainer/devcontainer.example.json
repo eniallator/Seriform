@@ -1,0 +1,9 @@
+{
+  "name": "Seriform",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "runArgs": ["--name", "seriform"],
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "postCreateCommand": "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 && sudo -E corepack enable && pnpm install"
+}

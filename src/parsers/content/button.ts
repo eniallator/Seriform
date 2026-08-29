@@ -1,7 +1,6 @@
 import { dom } from "niall-utils";
 
 import { contentParser } from "../../create.ts";
-
 import type { Config } from "../config.ts";
 
 export const buttonParser = (cfg: Config & { text?: string }) =>

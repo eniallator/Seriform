@@ -84,7 +84,7 @@ describe("checkboxParser", () => {
       vi.fn(() => true)
     );
 
-    expect(parser.serialise(false)).toBe(null);
+    expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets or removes checked attribute", () => {

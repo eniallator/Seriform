@@ -89,7 +89,7 @@ describe("colorParser", () => {
       vi.fn(() => valueA)
     );
 
-    expect(parser.serialise(false)).toBe(null);
+    expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {
@@ -117,7 +117,7 @@ describe("colorParser", () => {
 
     const el = parser.html(null, null, false) as HTMLInputElement;
     el.value = `#${valueA}`;
-    el.oninput?.({} as Event);
+    el.oninput?.({} as InputEvent);
 
     expect(onChange).toHaveBeenCalledWith(valueA);
   });

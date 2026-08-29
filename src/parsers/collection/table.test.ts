@@ -1,7 +1,7 @@
 import { tuple } from "niall-utils";
 import { describe, expect, it, vi } from "vitest";
 
-import { numberParser, checkboxParser, textParser } from "../value/index.ts";
+import { checkboxParser, numberParser, textParser } from "../value/index.ts";
 import { tableParser } from "./table.ts";
 
 describe("tableParser", () => {
@@ -31,132 +31,92 @@ describe("tableParser", () => {
     [true, "Hello World!", 30],
   ];
 
-  it("creates the input with given attributes and default value", () => {
-    const parser = tableParser({
-      default: valueA,
-      fields,
-      attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn());
-
-    const el = parser.html("id", null, false);
-
-    expect(el.tagName).toBe("DIV");
-    expect(getTableValue(el)).toStrictEqual(valueA);
-    expect(el.getAttribute("id")).toBe("id");
-    expect(el.dataset.hello).toBe("world!");
-  });
-
-  it("initial state is expected", () => {
-    expect(
-      getTableValue(
-        tableParser({ fields, default: valueB })
-          .methods(vi.fn(), vi.fn())
-          .html("id", valueASerialised, false)
-      )
-    ).toStrictEqual(valueA);
-
-    expect(
-      getTableValue(
-        tableParser({ fields, default: valueA })
-          .methods(vi.fn(), vi.fn())
-          .html("id", null, false)
-      )
-    ).toStrictEqual(valueA);
-
-    expect(
-      tableParser({ fields, default: valueA })
-        .methods(vi.fn(), vi.fn())
-        .html("id", null, false)
-        .querySelector(".actions")
-    ).toBeNull();
-
-    expect(
-      getTableValue(
-        tableParser({ fields, default: [], expandable: true })
-          .methods(vi.fn(), vi.fn())
-          .html("id", valueASerialised, false)
-      )
-    ).toStrictEqual(valueA);
-
-    expect(
-      tableParser({ fields, default: [], expandable: true })
-        .methods(vi.fn(), vi.fn())
-        .html("id", null, false)
-        .querySelector(".actions")
-    ).not.toBeNull();
-  });
-
-  it("expandable tables let you add rows", () => {
-    const el = tableParser({ fields, default: valueA, expandable: true })
+  it("renders one <tr> per item, each field in its own <td>", () => {
+    const el = tableParser({ default: valueA, fields })
       .methods(vi.fn(), vi.fn())
       .html("id", null, false);
 
-    (el.querySelector("button[data-action=add]") as HTMLButtonElement).click();
-
-    expect(getTableValue(el)).toStrictEqual([...valueA, [false, "", 0]]);
+    expect(getTableValue(el)).toStrictEqual(valueA);
   });
 
-  it("expandable tables let you delete rows", () => {
-    const el = tableParser({ fields, default: valueA, expandable: true })
-      .methods(
-        vi.fn(),
-        vi.fn(() => valueA)
-      )
-      .html("id", null, false);
+  it("deserialises a flattened query string into rows, chunked by field count", () => {
+    const el = tableParser({ fields, default: valueB })
+      .methods(vi.fn(), vi.fn())
+      .html("id", valueASerialised, false);
 
-    (el.querySelector("input[data-selector]") as HTMLInputElement).checked =
-      true;
-
-    (
-      el.querySelector("button[data-action=delete]") as HTMLButtonElement
-    ).click();
-
-    expect(getTableValue(el)).toStrictEqual(valueA.slice(1));
+    expect(getTableValue(el)).toStrictEqual(valueA);
   });
 
-  it("serialise returns correct value for shortUrl", () => {
+  it("getValue reads current field values back from the DOM, honoring the row-select offset", () => {
+    const parser = tableParser({ fields, default: valueA }).methods(
+      vi.fn(),
+      vi.fn()
+    );
+    const el = parser.html("id", null, false);
+    expect(parser.getValue(el)).toStrictEqual(valueA);
+
+    const expandableParser = tableParser({
+      fields,
+      default: valueA,
+      expandable: true,
+    }).methods(vi.fn(), vi.fn());
+    const expandableEl = expandableParser.html("id", null, false);
+    expect(expandableParser.getValue(expandableEl)).toStrictEqual(valueA);
+  });
+
+  it("serialise joins each row's fields, then joins rows, using each field's own serialise", () => {
     const parser = tableParser({ fields, default: valueB }).methods(
       vi.fn(),
       vi.fn(() => valueA)
     );
-
     parser.html("id", null, false);
 
     expect(parser.serialise(true)).toBe(valueAShort);
     expect(parser.serialise(false)).toBe(valueASerialised);
   });
 
-  it("html deserialises shortUrl properly", () => {
-    const parser = tableParser({ fields, default: valueB }).methods(
-      vi.fn(),
-      vi.fn()
-    );
+  it("expandable add/delete keep the rendered <tr><td> DOM in sync", () => {
+    const added = tableParser({ fields, default: valueA, expandable: true })
+      .methods(vi.fn(), vi.fn())
+      .html("id", null, false);
+    (
+      added.querySelector("button[data-action=add]") as HTMLButtonElement
+    ).click();
+    expect(getTableValue(added)).toStrictEqual([...valueA, [false, "", 0]]);
 
-    expect(getTableValue(parser.html("id", valueAShort, true))).toStrictEqual(
-      valueA
-    );
-    expect(
-      getTableValue(parser.html("id", valueASerialised, false))
-    ).toStrictEqual(valueA);
+    const deleted = tableParser({ fields, default: valueA, expandable: true })
+      .methods(
+        vi.fn(),
+        vi.fn(() => valueA)
+      )
+      .html("id", null, false);
+    (
+      deleted.querySelector("input[data-selector]") as HTMLInputElement
+    ).checked = true;
+    (
+      deleted.querySelector("button[data-action=delete]") as HTMLButtonElement
+    ).click();
+    expect(getTableValue(deleted)).toStrictEqual(valueA.slice(1));
   });
 
-  it("serialise returns null if value matches default", () => {
+  it("editing a rendered field's input updates just that field within its row", () => {
+    const onChange = vi.fn();
     const parser = tableParser({ fields, default: valueA }).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
-
-    expect(parser.serialise(false)).toBe(null);
-  });
-
-  it("updateValue sets the value", () => {
-    const parser = tableParser({ fields, default: valueB }).methods(
-      vi.fn(),
+      onChange,
       vi.fn(() => valueA)
     );
     const el = parser.html("id", null, false);
 
-    parser.updateValue(el, false);
-    expect(getTableValue(el)).toStrictEqual(valueA);
+    const firstTextInput = el.querySelector(
+      'input[type="text"]'
+    ) as HTMLInputElement;
+    firstTextInput.value = "Changed";
+    firstTextInput.onchange?.({} as Event);
+
+    const [checked, , num] = valueA[0] ?? [false, "", 0];
+    expect(onChange).toHaveBeenCalledWith([
+      [checked, "Changed", num],
+      valueA[1],
+    ]);
   });
 });

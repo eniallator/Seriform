@@ -1,19 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { SeriForm } from "./seriForm.ts";
 import { contentParser, createParsers, valueParser } from "./create.ts";
-
+import { queryKey } from "./helpers.ts";
+import { SeriForm } from "./seriForm.ts";
 import type { InitParserObject } from "./types.ts";
 
-const makeParsers = () =>
+interface CapturedFooFns {
+  onChange?: (value: string) => void;
+  getValue?: () => string;
+}
+
+const makeParsers = (captured: CapturedFooFns) =>
   createParsers({
-    foo: valueParser(
-      () => ({
-        html: vi.fn(() => document.createElement("input")),
-        getValue: vi.fn(() => "parsed"),
-        updateValue: vi.fn(),
-        serialise: vi.fn(() => "serialised"),
-      }),
+    foo: valueParser<string>(
+      (onChange, getValue) => {
+        captured.onChange = onChange;
+        captured.getValue = getValue;
+        return {
+          serialise: vi.fn(() => "serialised"),
+          getValue: vi.fn(() => "parsed"),
+          updateValue: vi.fn(),
+          html: vi.fn(() => document.createElement("input")),
+        };
+      },
       "Foo",
       "Foo Title"
     ),
@@ -30,10 +39,12 @@ type TestParserValues =
 describe("SeriForm", () => {
   let baseEl: HTMLElement;
   let seriform: SeriForm<TestParserValues>;
+  let captured: CapturedFooFns;
 
   beforeEach(() => {
     baseEl = document.createElement("div");
-    seriform = new SeriForm(makeParsers(), baseEl, {
+    captured = {};
+    seriform = new SeriForm(makeParsers(captured), baseEl, {
       query: location.search,
     });
   });
@@ -49,7 +60,7 @@ describe("SeriForm", () => {
   // --- getValue ---
   it("getValue returns the value for a key", () => {
     expect(seriform.getValue("foo")).toBe("parsed");
-    expect(seriform.getValue("bar")).toBe(null);
+    expect(seriform.getValue("bar")).toBeNull();
   });
 
   // --- setValue ---
@@ -58,7 +69,7 @@ describe("SeriForm", () => {
     expect(seriform.getValue("foo")).toBe("newVal");
 
     seriform.setValue("bar", "test");
-    expect(seriform.getValue("bar")).toBe(null);
+    expect(seriform.getValue("bar")).toBeNull();
   });
 
   // --- addListener & tellListeners ---
@@ -91,10 +102,109 @@ describe("SeriForm", () => {
     expect(cb).toHaveBeenCalled();
   });
 
+  // --- parser onChange / getValue ---
+  it("parser onChange updates the value and notifies listeners when non-null", () => {
+    const cb = vi.fn();
+    seriform.addListener(cb);
+
+    captured.onChange?.("changed");
+
+    expect(seriform.getValue("foo")).toBe("changed");
+    expect(cb).toHaveBeenCalledWith(seriform.getAllValues(), "foo");
+  });
+
+  it("parser onChange leaves the value unchanged when null", () => {
+    captured.onChange?.(null as unknown as string);
+
+    expect(seriform.getValue("foo")).toBe("parsed");
+  });
+
+  it("parser getValue reads the current state", () => {
+    captured.onChange?.("changed");
+
+    expect(captured.getValue?.()).toBe("changed");
+  });
+
+  // --- addCopyToClipboardHandler ---
+  it("addCopyToClipboardHandler copies the share URL when clicked", () => {
+    const writeText = vi.fn();
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+
+    const button = document.createElement("button");
+    button.id = "share-btn";
+    baseEl.appendChild(button);
+    document.body.appendChild(baseEl);
+
+    seriform.addCopyToClipboardHandler("#share-btn");
+    button.click();
+
+    expect(writeText).toHaveBeenCalledWith(
+      `${location.protocol}//${location.host}${location.pathname}?foo=serialised`
+    );
+
+    document.body.removeChild(baseEl);
+  });
+
+  it("addCopyToClipboardHandler omits the query string when there is none", () => {
+    const writeText = vi.fn();
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      configurable: true,
+    });
+
+    const contentOnlySeriform = new SeriForm(
+      createParsers({
+        bar: contentParser(
+          () => document.createElement("button"),
+          "Bar",
+          "Bar Title"
+        ),
+      }),
+      baseEl,
+      { query: "" }
+    );
+
+    const button = document.createElement("button");
+    button.id = "share-btn-2";
+    baseEl.appendChild(button);
+    document.body.appendChild(baseEl);
+
+    contentOnlySeriform.addCopyToClipboardHandler("#share-btn-2");
+    button.click();
+
+    expect(writeText).toHaveBeenCalledWith(
+      `${location.protocol}//${location.host}${location.pathname}`
+    );
+
+    document.body.removeChild(baseEl);
+  });
+
   // --- serialiseToUrlParams ---
   it("serialiseToUrlParams returns correct string", () => {
     const result = seriform.serialiseToUrlParams();
     expect(result).toBe("foo=serialised");
+  });
+
+  it("serialiseToUrlParams uses hashed keys with no '=' separator for shortUrl mode, defaulting the hash length to 6", () => {
+    const defaultHashLength = new SeriForm(makeParsers({}), baseEl, {
+      query: "",
+      shortUrl: true,
+    });
+    expect(defaultHashLength.serialiseToUrlParams()).toBe(
+      `${queryKey("foo", 6)}serialised`
+    );
+
+    const explicitHashLength = new SeriForm(makeParsers({}), baseEl, {
+      query: "",
+      shortUrl: true,
+      hashLength: 4,
+    });
+    expect(explicitHashLength.serialiseToUrlParams()).toBe(
+      `${queryKey("foo", 4)}serialised`
+    );
   });
 
   it("serialiseToUrlParams handles no extra", () => {

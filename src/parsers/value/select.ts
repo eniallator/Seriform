@@ -2,27 +2,24 @@ import { isOneOf } from "deep-guards";
 import { dom } from "niall-utils";
 
 import { valueParser } from "../../create.ts";
-
 import type { ValueConfig } from "../config.ts";
 
-type SelectValue<A extends readonly [string, ...string[]]> = A[number];
-
 export const selectParser = <const A extends readonly [string, ...string[]]>(
-  cfg: ValueConfig<SelectValue<A>> & { options: A }
+  cfg: ValueConfig<A[number]> & { options: A }
 ) => {
   const isOption = isOneOf(...cfg.options);
   const defaultValue = cfg.default ?? cfg.options[0];
 
-  return valueParser<SelectValue<A>>(
+  return valueParser<A[number]>(
     (onChange, getValue, externalCfg) => ({
       serialise: () =>
-        getValue() !== (externalCfg?.default ?? defaultValue)
-          ? getValue()
-          : null,
+        getValue() === (externalCfg?.default ?? defaultValue)
+          ? null
+          : getValue(),
+      getValue: el => (el as HTMLSelectElement).value,
       updateValue: el => {
         (el as HTMLSelectElement).value = getValue();
       },
-      getValue: el => (el as HTMLSelectElement).value as SelectValue<A>,
       html: (id, query) => {
         const initial = isOption(query)
           ? query
@@ -36,16 +33,14 @@ export const selectParser = <const A extends readonly [string, ...string[]]>(
         });
 
         const opts = cfg.options.map(
-          opt =>
-            `<option value="${opt}"${opt === initial ? " selected" : ""}>${
-              opt
-            }</option>`
+          opt => `<option value="${opt}">${opt}</option>`
         );
 
         const el = dom.toHtml(`<select ${attrs}>${opts.join("")}</select>`);
+        el.value = initial;
 
         el.onchange = () => {
-          onChange(el.value as SelectValue<A>);
+          onChange(el.value);
         };
 
         return el;

@@ -34,10 +34,10 @@ export const contentParser = (
   label,
   title,
   methods: onChange => ({
+    type: "Content",
     html: id =>
       initHtml(id, () => {
         onChange(null);
       }),
-    type: "Content",
   }),
 });

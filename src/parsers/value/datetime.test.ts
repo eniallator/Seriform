@@ -31,7 +31,7 @@ describe("datetimeParser", () => {
           })
           .html(null, valueA, false) as HTMLInputElement
       ).value
-    ).toBe(`${valueA}.000`);
+    ).toBe(valueA);
 
     expect(
       (
@@ -42,7 +42,7 @@ describe("datetimeParser", () => {
           })
           .html(null, null, false) as HTMLInputElement
       ).value
-    ).toBe(`${valueA}.000`);
+    ).toBe(valueA);
 
     expect(
       (
@@ -53,7 +53,7 @@ describe("datetimeParser", () => {
           })
           .html(null, null, false) as HTMLInputElement
       ).value
-    ).toBe(`${valueA}.000`);
+    ).toBe(valueA);
 
     expect(
       (
@@ -61,7 +61,7 @@ describe("datetimeParser", () => {
           .methods(vi.fn(), vi.fn())
           .html(null, null, false) as HTMLInputElement
       ).value
-    ).toBe(`${valueA}.000`);
+    ).toBe(valueA);
 
     expect(
       (
@@ -69,7 +69,7 @@ describe("datetimeParser", () => {
           .methods(vi.fn(), vi.fn())
           .html(null, null, false) as HTMLInputElement
       ).value
-    ).toBe(formatLocaleDate(new Date(0)).slice(0, -3));
+    ).toBe(formatLocaleDate(new Date(0)));
   });
 
   it("serialise returns correct value for shortUrl", () => {
@@ -97,7 +97,7 @@ describe("datetimeParser", () => {
       vi.fn(() => new Date(valueA))
     );
 
-    expect(parser.serialise(false)).toBe(null);
+    expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {
