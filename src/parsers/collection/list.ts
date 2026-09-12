@@ -1,4 +1,6 @@
-import { dom, tuple, zip } from "niall-utils";
+import { tuple } from "niall-utils/core";
+import { zip } from "niall-utils/data";
+import { dom } from "niall-utils/ui";
 
 import type { InitParser, ValueParser } from "../../types.ts";
 import {

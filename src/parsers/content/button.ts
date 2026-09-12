@@ -1,4 +1,4 @@
-import { dom } from "niall-utils";
+import { dom } from "niall-utils/ui";
 
 import { contentParser } from "../../create.ts";
 import type { Config } from "../config.ts";

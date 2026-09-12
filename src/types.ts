@@ -1,4 +1,4 @@
-import type { Base64 } from "niall-utils";
+import type { Base64 } from "niall-utils/encoding";
 
 export interface ContentParser {
   type: "Content";

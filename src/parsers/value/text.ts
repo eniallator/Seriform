@@ -1,4 +1,4 @@
-import { dom } from "niall-utils";
+import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
 import type { ValueConfig } from "../config.ts";
@@ -20,10 +20,7 @@ export const textParser = (cfg: ValueConfig<string> & { area?: boolean }) => {
         const initial =
           query ?? externalCfg?.initial ?? externalCfg?.default ?? defaultValue;
 
-        const attrs = dom.toAttrs({
-          ...(id != null && { id }),
-          ...cfg.attrs,
-        });
+        const attrs = dom.toAttrs({ ...(id != null && { id }), ...cfg.attrs });
 
         const el = dom.toHtml(
           cfg.area

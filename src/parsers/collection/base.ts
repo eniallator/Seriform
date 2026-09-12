@@ -1,5 +1,6 @@
 import { isExact, isNumber, isString, isUnionOf } from "deep-guards";
-import { dom, mapFilter } from "niall-utils";
+import { mapFilter } from "niall-utils/functional";
+import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
 import type { Config } from "../config.ts";

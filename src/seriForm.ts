@@ -1,14 +1,8 @@
-import {
-  dom,
-  mapFilter,
-  mapObject,
-  Option,
-  tuple,
-  typedToEntries,
-  type Base64,
-  type Entry,
-  type UnionToPartial,
-} from "niall-utils";
+import { tuple, type UnionToPartial } from "niall-utils/core";
+import { mapObject, typedToEntries, type Entry } from "niall-utils/data";
+import type { Base64 } from "niall-utils/encoding";
+import { mapFilter, Option } from "niall-utils/functional";
+import { dom } from "niall-utils/ui";
 
 import { configItem, parseQuery, queryKey } from "./helpers.ts";
 import type { InitParserObject, Parser, ValueParser } from "./types.ts";
@@ -43,9 +37,9 @@ export class SeriForm<const R extends Record<string, unknown>> {
   constructor(
     initParsers: InitParserObject<R>,
     baseEl: HTMLElement,
-    options: SeriFormInternalOptions
+    options: SeriFormOptions
   ) {
-    const { query, shortUrl, hashLength } = options;
+    const { query, shortUrl, hashLength } = options as SeriFormInternalOptions;
     this.hashLength = shortUrl ? (hashLength ?? 6) : null;
 
     const initialValues = parseQuery(query, this.hashLength);

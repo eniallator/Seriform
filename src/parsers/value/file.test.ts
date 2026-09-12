@@ -1,4 +1,4 @@
-import { raise } from "niall-utils";
+import { raise } from "niall-utils/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { fileParser } from "./file.ts";

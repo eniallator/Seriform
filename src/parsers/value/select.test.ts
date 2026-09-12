@@ -1,4 +1,4 @@
-import { tuple } from "niall-utils";
+import { tuple } from "niall-utils/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { selectParser } from "./select.ts";

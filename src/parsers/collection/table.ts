@@ -1,4 +1,6 @@
-import { dom, tuple, zip } from "niall-utils";
+import { tuple } from "niall-utils/core";
+import { zip } from "niall-utils/data";
+import { dom } from "niall-utils/ui";
 
 import type { InitParser, ValueParser } from "../../types.ts";
 import {
@@ -77,8 +79,8 @@ export const tableParser = <const F extends FieldValues>(
 ) => {
   const expandable = cfg.expandable ?? false;
 
-  const colHtml = (title?: string, label?: string) =>
-    `<th scope="col"${title != null ? ` title="${title}"` : ""}>${label ?? ""}</th>`;
+  const colHtml = (title?: string, label: string = "") =>
+    `<th scope="col"${title != null ? ` title="${title}"` : ""}>${label}</th>`;
 
   return collectionParser<F, ValueParsers<F>>(cfg, {
     baseClass: "table",

@@ -1,4 +1,4 @@
-import { formatLocaleDate } from "niall-utils";
+import { formatLocaleDate } from "niall-utils/format";
 import { describe, expect, it, vi } from "vitest";
 
 import { datetimeParser } from "./datetime.ts";

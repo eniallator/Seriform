@@ -1,10 +1,10 @@
 import {
   base64FromUint,
   base64ToUint,
-  dom,
-  formatLocaleDate,
   isValidBase64,
-} from "niall-utils";
+} from "niall-utils/encoding";
+import { formatLocaleDate } from "niall-utils/format";
+import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
 import type { ValueConfig } from "../config.ts";

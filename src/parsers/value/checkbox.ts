@@ -1,5 +1,5 @@
 import { isOneOf } from "deep-guards";
-import { dom } from "niall-utils";
+import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
 import type { ValueConfig } from "../config.ts";

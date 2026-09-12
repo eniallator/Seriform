@@ -1,4 +1,6 @@
-import { base64FromUint, dom, type Base64, type FillTuple } from "niall-utils";
+import type { FillTuple } from "niall-utils/core";
+import { base64FromUint, type Base64 } from "niall-utils/encoding";
+import { dom } from "niall-utils/ui";
 
 export const configItem = (
   id: string,

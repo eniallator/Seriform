@@ -1,5 +1,5 @@
 import { isOneOf } from "deep-guards";
-import { dom } from "niall-utils";
+import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
 import type { ValueConfig } from "../config.ts";
@@ -27,10 +27,7 @@ export const selectParser = <const A extends readonly [string, ...string[]]>(
             ? externalCfg.initial
             : (externalCfg?.default ?? defaultValue);
 
-        const attrs = dom.toAttrs({
-          ...(id != null && { id }),
-          ...cfg.attrs,
-        });
+        const attrs = dom.toAttrs({ ...(id != null && { id }), ...cfg.attrs });
 
         const opts = cfg.options.map(
           opt => `<option value="${opt}">${opt}</option>`

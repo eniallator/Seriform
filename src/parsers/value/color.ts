@@ -1,4 +1,9 @@
-import { base64FromUint, base64ToUint, dom, isValidBase64 } from "niall-utils";
+import {
+  base64FromUint,
+  base64ToUint,
+  isValidBase64,
+} from "niall-utils/encoding";
+import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
 import type { ValueConfig } from "../config.ts";
