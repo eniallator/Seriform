@@ -9,7 +9,12 @@ describe("buttonParser", () => {
       title: "A helpful hint",
       attrs: { "data-hello": "world!" },
     });
-    const el = parser.methods(vi.fn(), vi.fn()).html("btn-id");
+    const el = parser
+      .methods(
+        vi.fn(),
+        vi.fn((): never => null as never)
+      )
+      .html("btn-id", null, false);
 
     expect(el.tagName).toBe("BUTTON");
     expect(el.textContent).toBe("Click me");
@@ -21,7 +26,12 @@ describe("buttonParser", () => {
   it("calls onChange when clicked", () => {
     const parser = buttonParser({});
     const onChange = vi.fn();
-    const el = parser.methods(onChange, vi.fn()).html("id");
+    const el = parser
+      .methods(
+        onChange,
+        vi.fn((): never => null as never)
+      )
+      .html("id", null, false);
 
     el.click();
 
@@ -30,7 +40,12 @@ describe("buttonParser", () => {
 
   it("should have defaults with an empty object", () => {
     const parser = buttonParser({});
-    const el = parser.methods(vi.fn(), vi.fn()).html(null);
+    const el = parser
+      .methods(
+        vi.fn(),
+        vi.fn((): never => null as never)
+      )
+      .html(null, null, false);
 
     expect(el.tagName).toBe("BUTTON");
     expect(el.textContent).toBe("");

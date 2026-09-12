@@ -5,15 +5,15 @@ import { mapFilter, Option } from "niall-utils/functional";
 import { dom } from "niall-utils/ui";
 
 import { configItem, parseQuery, queryKey } from "./helpers.ts";
-import type { InitParserObject, Parser, ValueParser } from "./types.ts";
+import type { InitParserObject, Parser } from "./types.ts";
 
-interface StateItem<T> {
+interface StateItem<T extends NonNullable<unknown>> {
   parser: Parser<T>;
   value: T;
   el: HTMLElement;
 }
 
-type State<R extends Record<string, unknown>> = {
+type State<R extends Record<string, NonNullable<unknown>>> = {
   [K in keyof R]: StateItem<R[K]>;
 };
 
@@ -26,7 +26,7 @@ type SeriFormInternalOptions = {
   query: string;
 } & UnionToPartial<SeriFormShortUrlOptions>;
 
-export class SeriForm<const R extends Record<string, unknown>> {
+export class SeriForm<const R extends Record<string, NonNullable<unknown>>> {
   private readonly hashLength: number | null;
   private readonly state: State<R>;
   private readonly listeners: {
@@ -58,8 +58,7 @@ export class SeriForm<const R extends Record<string, unknown>> {
       const query = initialValues[key] ?? null;
       const el = parser.html(id as string, query, shortUrl ?? false);
       baseEl.appendChild(configItem(id as string, el, label, title));
-      const value =
-        parser.type === "Value" ? parser.getValue(el) : (null as R[typeof id]);
+      const value = parser.getValue(el);
 
       return tuple(id, { parser, el, value });
     });
@@ -77,7 +76,7 @@ export class SeriForm<const R extends Record<string, unknown>> {
 
   setValue<I extends keyof R>(id: I, value: R[I]): void {
     const { parser, el } = this.state[id];
-    if (parser.type === "Value") {
+    if (parser.updateValue != null) {
       this.state[id].value = value;
       parser.updateValue(el, this.hashLength != null);
     }
@@ -105,10 +104,9 @@ export class SeriForm<const R extends Record<string, unknown>> {
       );
 
     return mapFilter(typedToEntries(this.state), ([id, { parser }]) =>
-      Option.some(parser)
-        .guard((p): p is ValueParser<R[keyof R]> => p.type === "Value")
-        .map(p => p.serialise(this.hashLength != null))
-        .map(serialised => urlPart(id as string, serialised))
+      Option.from(parser.serialise?.(this.hashLength != null)).map(serialised =>
+        urlPart(id as string, serialised)
+      )
     ).join("&");
   }
 

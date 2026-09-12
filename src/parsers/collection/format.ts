@@ -1,4 +1,4 @@
-export const formatField = (value: string | null): string =>
+export const formatField = (value: string | null | undefined): string =>
   value?.replaceAll(/[,\\]/g, String.raw`\$&`) ?? "";
 
 export const splitQueryValues = (query: string): (string | null)[] =>

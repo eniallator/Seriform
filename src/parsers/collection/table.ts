@@ -2,7 +2,7 @@ import { tuple } from "niall-utils/core";
 import { zip } from "niall-utils/data";
 import { dom } from "niall-utils/ui";
 
-import type { InitParser, ValueParser } from "../../types.ts";
+import type { InitParser, Parser } from "../../types.ts";
 import {
   collectionParser,
   type CollectionConfig,
@@ -10,15 +10,15 @@ import {
 } from "./base.ts";
 import { formatField } from "./format.ts";
 
-type ValueParsers<O extends readonly unknown[]> = {
-  [K in keyof O]: ValueParser<O[K]>;
+type ValueParsers<O extends readonly NonNullable<unknown>[]> = {
+  [K in keyof O]: Parser<O[K]>;
 };
 
-type InitValueParsers<O extends readonly unknown[]> = {
-  [K in keyof O]: InitParser<ValueParser<O[K]>>;
+type InitValueParsers<O extends readonly NonNullable<unknown>[]> = {
+  [K in keyof O]: InitParser<Parser<O[K]>>;
 };
 
-type FieldValues = readonly [unknown, ...unknown[]];
+type FieldValues = readonly [NonNullable<unknown>, ...NonNullable<unknown>[]];
 
 const getRowValues = <F extends FieldValues>(
   baseEl: Element,
@@ -51,7 +51,7 @@ const newRowFactory =
         (value: F[number]) => {
           onChange(getValue().with(i, value) as unknown as F);
         },
-        () => getValue()[i],
+        () => getValue()[i] as F[number],
         defaultValue?.[i] != null
           ? { initial: initial?.[i] ?? null, default: defaultValue[i] }
           : undefined
@@ -102,7 +102,7 @@ export const tableParser = <const F extends FieldValues>(
     newRow: newRowFactory(cfg.fields, expandable),
     getValues: getRowValues,
     serialiseRow: (row, shortUrl) =>
-      row.map(parser => formatField(parser.serialise(shortUrl))).join(","),
+      row.map(parser => formatField(parser.serialise?.(shortUrl))).join(","),
     isRowSelected: rowEl =>
       dom.get<HTMLInputElement>("[data-selector]", rowEl).checked,
   });

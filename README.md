@@ -94,18 +94,13 @@ seriform.getValue("bar"); // Is type string
 
 - **Overview:** The library ships a set of built-in value and content parsers, but it is intentionally pluggable — you can define and register your own parsers by returning an `InitParser<...>` object. Custom parsers integrate with the same lifecycle: initialization, DOM rendering, value extraction, update, and serialization.
 
-- **Anatomy — `ValueParser<T>`:**
-  - `type: "Value"` — discriminant.
-  - `html(id, query, shortUrl): HTMLElement` — render the input DOM for this parser.
-  - `serialise(shortUrl): string | null` — return a compact query representation or `null` when equal to default.
-  - `updateValue(el, shortUrl): void` — (re)render/update DOM when the state changes.
+- **Anatomy — `Parser<T>`:** every parser is the same shape; whether it contributes a real value is determined by which optional methods it defines, not a discriminant tag.
+  - `html(id, query, shortUrl): HTMLElement` — render the DOM for this parser.
   - `getValue(el): T` — read the value from the DOM element.
+  - `serialise(shortUrl): string | null` — _(optional)_ return a compact query representation or `null` when equal to default. Omit this for read-only content (buttons, info panels, etc.).
+  - `updateValue(el, shortUrl): void` — _(optional)_ (re)render/update DOM when the state changes. Omit alongside `serialise` for content-only parsers.
 
-- **Anatomy — `ContentParser`:**
-  - `type: "Content"` — discriminant.
-  - `html(id): HTMLElement` — render read-only content (buttons, info panels, etc.).
-
-There are some helpers for these: `valueParser<T>(...)` and `contentParser(...)`.
+There are some helpers for these: `valueParser<T>(...)` for parsers with a real, non-nullable value (`T extends NonNullable<unknown>`), and `contentParser(...)` for read-only content, whose value type is always `never`.
 
 Example — simple custom value parser (text input with uppercase normalization):
 

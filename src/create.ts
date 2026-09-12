@@ -1,43 +1,35 @@
-import type {
-  ContentParser,
-  InitParser,
-  InitParserObject,
-  ValueParser,
-} from "./types.ts";
+import type { InitParser, InitParserObject, Parser } from "./types.ts";
 
-export const createParsers = <O extends Record<string, unknown>>(
+export const createParsers = <O extends Record<string, NonNullable<unknown>>>(
   parsers: InitParserObject<O>
 ) => parsers;
 
-export const valueParser = <T>(
+export const valueParser = <T extends NonNullable<unknown>>(
   init: (
     onChange: (value: T) => void,
     getValue: () => T,
     externalCfg?: { initial: T | null; default: T }
-  ) => Omit<ValueParser<T>, "type">,
+  ) => Required<Parser<T>>,
   label?: string,
   title?: string
-): InitParser<ValueParser<T>> => ({
+): InitParser<Required<Parser<T>>> => ({
   label,
   title,
-  methods: (...args) => ({ ...init(...args), type: "Value" }),
+  methods: init,
 });
 
 export const contentParser = (
-  initHtml: (
-    id: string | null,
-    onChange: () => void
-  ) => ReturnType<ContentParser["html"]>,
+  initHtml: (id: string | null, onChange: () => void) => HTMLElement,
   label?: string,
   title?: string
-): InitParser<ContentParser> => ({
+): InitParser<Parser> => ({
   label,
   title,
   methods: onChange => ({
-    type: "Content",
+    getValue: () => null as never,
     html: id =>
       initHtml(id, () => {
-        onChange(null);
+        onChange(null as never);
       }),
   }),
 });

@@ -64,11 +64,11 @@ describe("SeriForm", () => {
   });
 
   // --- setValue ---
-  it("setValue updates the value and calls updateValue if type is 'Value'", () => {
+  it("setValue updates the value and calls updateValue if updateValue is defined", () => {
     seriform.setValue("foo", "newVal");
     expect(seriform.getValue("foo")).toBe("newVal");
 
-    seriform.setValue("bar", "test");
+    seriform.setValue("bar", "test" as never);
     expect(seriform.getValue("bar")).toBeNull();
   });
 

@@ -8,9 +8,9 @@ import {
 } from "./base.ts";
 
 /**
- * The row "handle" mirrors what a real ValueParser exposes: `el` to read the rendered DOM value from (used
- * by `getValues`, matching `ValueParser.getValue(el)`), and `getValue` to read the *captured* live value
- * (used by `serialiseRow`, matching `ValueParser.serialise()` which never reads the DOM).
+ * The row "handle" mirrors what a real Parser exposes: `el` to read the rendered DOM value from (used
+ * by `getValues`, matching `Parser.getValue(el)`), and `getValue` to read the *captured* live value
+ * (used by `serialiseRow`, matching `Parser.serialise()` which never reads the DOM).
  */
 interface FakeRow {
   el: HTMLInputElement;

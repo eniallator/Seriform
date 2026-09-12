@@ -1,28 +1,20 @@
 import type { Base64 } from "niall-utils/encoding";
 
-export interface ContentParser {
-  type: "Content";
-  html: (id: string | null) => HTMLElement;
-}
-
-export interface ValueParser<T> {
-  type: "Value";
+export interface Parser<T extends NonNullable<unknown> = never> {
   html: (
     id: string | null,
     query: string | null,
     shortUrl: boolean
   ) => HTMLElement;
-  serialise: (shortUrl: boolean) => string | Base64 | null;
-  updateValue: (el: HTMLElement, shortUrl: boolean) => void;
   getValue: (el: HTMLElement) => T;
+  serialise?: (shortUrl: boolean) => string | Base64 | null;
+  updateValue?: (el: HTMLElement, shortUrl: boolean) => void;
 }
 
-export type Parser<T> = ContentParser | ValueParser<T>;
+export type ParserValue<P extends Parser<NonNullable<unknown>>> =
+  P extends Parser<infer T> ? T : never;
 
-export type ParserValue<P extends Parser<unknown>> =
-  P extends ValueParser<infer T> ? T : P extends ContentParser ? null : never;
-
-export type InitParser<P extends Parser<unknown>> = {
+export interface InitParser<P extends Parser<NonNullable<unknown>>> {
   label?: string;
   title?: string;
   methods: (
@@ -30,10 +22,11 @@ export type InitParser<P extends Parser<unknown>> = {
     getValue: () => ParserValue<P>,
     externalCfg?: { initial: ParserValue<P> | null; default: ParserValue<P> }
   ) => P;
-};
+}
 
 export type InitParserObject<
-  O extends Record<string, unknown> = Record<string, unknown>,
-> = {
-  [K in keyof O]: InitParser<Parser<O[K]>>;
-};
+  O extends Record<string, NonNullable<unknown>> = Record<
+    string,
+    NonNullable<unknown>
+  >,
+> = { [K in keyof O]: InitParser<Parser<O[K]>> };
