@@ -4,6 +4,7 @@ import type { Base64 } from "niall-utils/encoding";
 import { mapFilter, Option } from "niall-utils/functional";
 import { dom } from "niall-utils/ui";
 
+import { FieldRegistry } from "./fieldRegistry.ts";
 import { configItem, parseQuery, queryKey } from "./helpers.ts";
 import type { InitParserObject, Parser } from "./types.ts";
 
@@ -29,6 +30,7 @@ type SeriFormInternalOptions = {
 export class SeriForm<const R extends Record<string, NonNullable<unknown>>> {
   private readonly hashLength: number | null;
   private readonly state: State<R>;
+  private readonly registry = new FieldRegistry();
   private readonly listeners: {
     callback: (values: R, updatedId?: keyof R) => void;
     subscriptions: Set<keyof R>;
@@ -49,9 +51,11 @@ export class SeriForm<const R extends Record<string, NonNullable<unknown>>> {
       const parser = methods(
         value => {
           if (value != null) this.state[id].value = value;
-          this.tellListeners(id);
+          this.registry.notify(id as string, this.state[id].value);
         },
-        () => this.state[id].value
+        () => this.state[id].value,
+        undefined,
+        this.registry.context()
       );
 
       const key = queryKey(id as string, this.hashLength);
@@ -60,7 +64,16 @@ export class SeriForm<const R extends Record<string, NonNullable<unknown>>> {
       baseEl.appendChild(configItem(id as string, el, label, title));
       const value = parser.getValue(el);
 
+      this.registry.register(id as string, () => this.state[id].value);
+      this.registry.subscribe(id as string, () => {
+        this.tellListeners(id);
+      });
+
       return tuple(id, { parser, el, value });
+    });
+
+    typedToEntries(this.state).forEach(([id, { value }]) => {
+      this.registry.notify(id as string, value);
     });
   }
 

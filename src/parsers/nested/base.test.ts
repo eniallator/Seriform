@@ -6,6 +6,7 @@ import {
   type CollectionAdapter,
   type CollectionConfig,
 } from "./base.ts";
+import { encodeFrames } from "./frames.ts";
 
 /**
  * The row "handle" mirrors what a real Parser exposes: `el` to read the rendered DOM value from (used
@@ -17,13 +18,10 @@ interface FakeRow {
   getValue: () => string;
 }
 
-const fakeAdapter = (
-  fieldsPerItem: number = 1
-): CollectionAdapter<string, FakeRow> => ({
+const fakeAdapter = (): CollectionAdapter<string, FakeRow> => ({
   baseClass: "fake",
   addLabel: "Add",
   deleteLabel: "Delete",
-  fieldsPerItem,
   containerSelector: "ul",
   buildContentHtml: () => "<ul></ul>",
   newRow: ({
@@ -50,7 +48,7 @@ const fakeAdapter = (
     return [li, { el: input, getValue }];
   },
   getValues: (_baseEl, rows) => rows.map(row => row.el.value),
-  serialiseRow: (row, shortUrl) => `${row.getValue()}${shortUrl ? "!" : ""}`,
+  serialiseRow: (row, shortUrl) => [`${row.getValue()}${shortUrl ? "!" : ""}`],
   isRowSelected: rowEl =>
     (rowEl.querySelector("[data-selector]") as HTMLInputElement).checked,
 });
@@ -66,12 +64,6 @@ const getRowElements = (el: HTMLElement): HTMLLIElement[] => [
 
 describe("collectionParser", () => {
   const cfg: CollectionConfig<string> = { default: ["a", "b"] };
-
-  it("throws if fieldsPerItem is not greater than 0", () => {
-    expect(() =>
-      collectionParser<string, FakeRow>(cfg, fakeAdapter(0))
-    ).toThrow("fieldsPerItem must be greater than 0, got 0");
-  });
 
   it("builds the wrapper with base class, id, title, and label", () => {
     const parser = collectionParser<string, FakeRow>(
@@ -142,16 +134,35 @@ describe("collectionParser", () => {
     ).toStrictEqual(["y"]);
   });
 
-  it("parses the query into rows using fieldsPerItem to chunk", () => {
+  it("parses the query into one row per frame, decoding each row's own nested frames", () => {
     const parser = collectionParser<string, FakeRow>(
       cfg,
-      fakeAdapter(2)
+      fakeAdapter()
     ).methods(vi.fn(), vi.fn());
 
-    const el = parser.html(null, "1,2,3,4", false);
+    const query = encodeFrames([
+      encodeFrames(["1", "2"]),
+      encodeFrames(["3", "4"]),
+    ]);
+    const el = parser.html(null, query, false);
 
     expect(getRowInputs(el).map(input => input.value)).toStrictEqual([
       "1",
+      "3",
+    ]);
+  });
+
+  it("treats a null row frame as an empty row, falling back to that row's default", () => {
+    const parser = collectionParser<string, FakeRow>(
+      cfg,
+      fakeAdapter()
+    ).methods(vi.fn(), vi.fn());
+
+    const query = encodeFrames([null, encodeFrames(["3"])]);
+    const el = parser.html(null, query, false);
+
+    expect(getRowInputs(el).map(input => input.value)).toStrictEqual([
+      "a",
       "3",
     ]);
   });
@@ -166,7 +177,7 @@ describe("collectionParser", () => {
     expect(parser.getValue(el)).toStrictEqual(["a", "b"]);
   });
 
-  it("serialise returns null when the value matches default, else joins serialiseRow", () => {
+  it("serialise returns null when the value matches default, else frame-encodes serialiseRow", () => {
     const matching = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
@@ -184,8 +195,12 @@ describe("collectionParser", () => {
       vi.fn(() => ["x", "y"])
     );
     differing.html(null, null, false);
-    expect(differing.serialise(false)).toBe("x,y");
-    expect(differing.serialise(true)).toBe("x!,y!");
+    expect(differing.serialise(false)).toBe(
+      encodeFrames([encodeFrames(["x"]), encodeFrames(["y"])])
+    );
+    expect(differing.serialise(true)).toBe(
+      encodeFrames([encodeFrames(["x!"]), encodeFrames(["y!"])])
+    );
   });
 
   it("updateValue clears and rebuilds rows from the current value", () => {

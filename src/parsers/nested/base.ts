@@ -4,7 +4,7 @@ import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
 import type { Config } from "../config.ts";
-import { splitQueryValues } from "./format.ts";
+import { decodeFrames, encodeFrames } from "./frames.ts";
 
 export interface NewRowParams<Item> {
   queryItems?: (string | null)[];
@@ -32,15 +32,14 @@ export interface CollectionAdapter<Item, Row> {
   addLabel: string;
   /** Label for the "delete" action button, e.g. "Delete Selected". */
   deleteLabel: string;
-  /** How many flat query values make up one row; used to chunk the raw query string. */
-  fieldsPerItem: number;
   /** Builds the markup that goes inside `<div class="content">…</div>` (the `<ul>` or `<table>`). */
   buildContentHtml: () => string;
   /** Selector, relative to the base element, whose children are one-per-row (e.g. "ul" | "tbody"). */
   containerSelector: string;
   newRow: NewRow<Item, Row>;
   getValues: (baseEl: Element, rows: Row[], expandable: boolean) => Item[];
-  serialiseRow: (row: Row, shortUrl: boolean) => string;
+  /** One serialised string per field in the row (null for a field with nothing to serialise). */
+  serialiseRow: (row: Row, shortUrl: boolean) => (string | null)[];
   /** Reads whether a rendered row (a direct child of the container) is checked for deletion. */
   isRowSelected: (rowEl: Element) => boolean;
 }
@@ -61,12 +60,6 @@ export const collectionParser = <Item extends NonNullable<unknown>, Row>(
   cfg: CollectionConfig<Item>,
   adapter: CollectionAdapter<Item, Row>
 ) => {
-  if (adapter.fieldsPerItem <= 0) {
-    throw new Error(
-      `fieldsPerItem must be greater than 0, got ${adapter.fieldsPerItem}`
-    );
-  }
-
   const { expandable = false } = cfg;
 
   const { class: passedClass, ...rest } = cfg.attrs ?? {};
@@ -103,7 +96,9 @@ export const collectionParser = <Item extends NonNullable<unknown>, Row>(
       serialise: shortUrl =>
         isDefault(getValue())
           ? null
-          : rows.map(row => adapter.serialiseRow(row, shortUrl)).join(","),
+          : encodeFrames(
+              rows.map(row => encodeFrames(adapter.serialiseRow(row, shortUrl)))
+            ),
       getValue: el => adapter.getValues(el, rows, expandable),
       updateValue: (el, shortUrl) => {
         const containerEl = dom.get(adapter.containerSelector, el);
@@ -151,22 +146,16 @@ export const collectionParser = <Item extends NonNullable<unknown>, Row>(
         const create = createRow(containerEl);
         const params = rowParams(shortUrl);
 
-        const flatQueryValues = query != null ? splitQueryValues(query) : [];
-        const numValues = Math.floor(
-          flatQueryValues.length / adapter.fieldsPerItem
-        );
-        const queryChunks = [...new Array<undefined>(numValues)].map((_, i) =>
-          flatQueryValues.slice(
-            i * adapter.fieldsPerItem,
-            (i + 1) * adapter.fieldsPerItem
-          )
-        );
+        const rowQueries = query != null ? decodeFrames(query) : [];
 
         rows =
-          numValues === cfg.default.length ||
-          (expandable && queryChunks.length > 0)
-            ? queryChunks.map((queryItems, i) =>
-                create({ queryItems, ...params(i) })
+          rowQueries.length === cfg.default.length ||
+          (expandable && rowQueries.length > 0)
+            ? rowQueries.map((rowQuery, i) =>
+                create({
+                  queryItems: rowQuery != null ? decodeFrames(rowQuery) : [],
+                  ...params(i),
+                })
               )
             : (externalCfg?.initial ?? externalCfg?.default ?? cfg.default).map(
                 (initial, i) => create({ initial, ...params(i) })

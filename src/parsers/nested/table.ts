@@ -8,7 +8,6 @@ import {
   type CollectionConfig,
   type NewRow,
 } from "./base.ts";
-import { formatField } from "./format.ts";
 
 type ValueParsers<O extends readonly NonNullable<unknown>[]> = {
   [K in keyof O]: Parser<O[K]>;
@@ -86,7 +85,6 @@ export const tableParser = <const F extends FieldValues>(
     baseClass: "table",
     addLabel: "Add Row",
     deleteLabel: "Delete Selected",
-    fieldsPerItem: cfg.fields.length,
     containerSelector: "tbody",
     buildContentHtml: () => `
       <table>
@@ -102,7 +100,7 @@ export const tableParser = <const F extends FieldValues>(
     newRow: newRowFactory(cfg.fields, expandable),
     getValues: getRowValues,
     serialiseRow: (row, shortUrl) =>
-      row.map(parser => formatField(parser.serialise?.(shortUrl))).join(","),
+      row.map(parser => parser.serialise?.(shortUrl) ?? null),
     isRowSelected: rowEl =>
       dom.get<HTMLInputElement>("[data-selector]", rowEl).checked,
   });

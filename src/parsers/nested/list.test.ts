@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { checkboxParser, textParser } from "../value/index.ts";
+import { encodeFrames } from "./frames.ts";
 import { listParser } from "./list.ts";
 
 describe("listParser", () => {
@@ -11,7 +12,7 @@ describe("listParser", () => {
     );
 
   const valueA: string[] = ["Foo, Bar, Baz\\", "Hello World!"];
-  const valueASerialised = String.raw`Foo\, Bar\, Baz\\,Hello World!`;
+  const valueASerialised = encodeFrames(valueA.map(v => encodeFrames([v])));
   const valueB: string[] = ["Test", "Other"];
 
   it("renders one <li> per item, wrapping the field's own html", () => {
@@ -48,7 +49,7 @@ describe("listParser", () => {
     expect(expandableParser.getValue(expandableEl)).toStrictEqual(valueA);
   });
 
-  it("serialise applies formatField to each item's own serialise output", () => {
+  it("serialise frame-encodes each item's own serialise output", () => {
     const parser = listParser({
       field: checkboxParser({}),
       default: [true, false],
@@ -58,8 +59,27 @@ describe("listParser", () => {
     );
     parser.html("id", null, false);
 
-    expect(parser.serialise(true)).toBe("0,1");
-    expect(parser.serialise(false)).toBe("false,true");
+    expect(parser.serialise(true)).toBe(
+      encodeFrames([encodeFrames(["0"]), encodeFrames(["1"])])
+    );
+    expect(parser.serialise(false)).toBe(
+      encodeFrames([encodeFrames(["false"]), encodeFrames(["true"])])
+    );
+  });
+
+  it("frame-encodes an item as null when its own value matches its own default", () => {
+    const parser = listParser({
+      field: checkboxParser({}),
+      default: [true, false],
+    }).methods(
+      vi.fn(),
+      vi.fn(() => [true, true])
+    );
+    parser.html("id", null, false);
+
+    expect(parser.serialise(false)).toBe(
+      encodeFrames([encodeFrames([null]), encodeFrames(["true"])])
+    );
   });
 
   it("expandable add/delete keep the rendered <li> DOM in sync", () => {

@@ -8,7 +8,6 @@ import {
   type CollectionConfig,
   type NewRow,
 } from "./base.ts";
-import { formatField } from "./format.ts";
 
 const getItemValues = <T extends NonNullable<unknown>>(
   baseEl: Element,
@@ -62,13 +61,11 @@ export const listParser = <const T extends NonNullable<unknown>>(
     baseClass: "list",
     addLabel: "Add Item",
     deleteLabel: "Delete Selected",
-    fieldsPerItem: 1,
     containerSelector: "ul",
     buildContentHtml: () => "<ul></ul>",
     newRow: newRowFactory(cfg.field, cfg.expandable ?? false),
     getValues: getItemValues,
-    serialiseRow: (parser, shortUrl) =>
-      formatField(parser.serialise?.(shortUrl)),
+    serialiseRow: (parser, shortUrl) => [parser.serialise?.(shortUrl) ?? null],
     isRowSelected: rowEl =>
       dom.get<HTMLInputElement>("[data-selector]", rowEl).checked,
   });

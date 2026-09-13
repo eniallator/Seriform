@@ -3,19 +3,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { contentParser, createParsers, valueParser } from "./create.ts";
 import { queryKey } from "./helpers.ts";
 import { SeriForm } from "./seriForm.ts";
-import type { InitParserObject } from "./types.ts";
+import type { AnySiblingContext, InitParserObject } from "./types.ts";
 
 interface CapturedFooFns {
   onChange?: (value: string) => void;
   getValue?: () => string;
+  siblings?: AnySiblingContext;
 }
 
 const makeParsers = (captured: CapturedFooFns) =>
   createParsers({
     foo: valueParser<string>(
-      (onChange, getValue) => {
+      (onChange, getValue, _externalCfg, siblings) => {
         captured.onChange = onChange;
         captured.getValue = getValue;
+        captured.siblings = siblings;
         return {
           serialise: vi.fn(() => "serialised"),
           getValue: vi.fn(() => "parsed"),
@@ -123,6 +125,31 @@ describe("SeriForm", () => {
     captured.onChange?.("changed");
 
     expect(captured.getValue?.()).toBe("changed");
+  });
+
+  // --- sibling context ---
+  it("siblings.getValue reads a sibling's live value", () => {
+    captured.onChange?.("changed");
+    expect(captured.siblings?.getValue("foo")).toBe("changed");
+  });
+
+  it("siblings.getValue throws for an unregistered id", () => {
+    expect(() => captured.siblings?.getValue("missing")).toThrow(
+      /No sibling field registered/
+    );
+  });
+
+  it("siblings.subscribe is notified on change, and stops after unsubscribing", () => {
+    const cb = vi.fn();
+    const unsubscribe = captured.siblings?.subscribe("foo", cb);
+
+    captured.onChange?.("changed");
+    expect(cb).toHaveBeenCalledWith("changed");
+
+    cb.mockClear();
+    unsubscribe?.();
+    captured.onChange?.("changed again");
+    expect(cb).not.toHaveBeenCalled();
   });
 
   // --- addCopyToClipboardHandler ---

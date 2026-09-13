@@ -2,6 +2,7 @@ import { tuple } from "niall-utils/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { checkboxParser, numberParser, textParser } from "../value/index.ts";
+import { encodeFrames } from "./frames.ts";
 import { tableParser } from "./table.ts";
 
 describe("tableParser", () => {
@@ -24,8 +25,14 @@ describe("tableParser", () => {
     [true, "Foo, Bar, Baz\\", 10],
     [false, "quux & other", -1],
   ];
-  const valueASerialised = String.raw`true,Foo\, Bar\, Baz\\,10,false,quux & other,-1`;
-  const valueAShort = String.raw`1,Foo\, Bar\, Baz\\,10,0,quux & other,-1`;
+  const valueASerialised = encodeFrames([
+    encodeFrames(["true", "Foo, Bar, Baz\\", "10"]),
+    encodeFrames(["false", "quux & other", "-1"]),
+  ]);
+  const valueAShort = encodeFrames([
+    encodeFrames(["1", "Foo, Bar, Baz\\", "10"]),
+    encodeFrames(["0", "quux & other", "-1"]),
+  ]);
   const valueB: [boolean, string, number][] = [
     [false, "Test", 20],
     [true, "Hello World!", 30],
@@ -39,7 +46,7 @@ describe("tableParser", () => {
     expect(getTableValue(el)).toStrictEqual(valueA);
   });
 
-  it("deserialises a flattened query string into rows, chunked by field count", () => {
+  it("deserialises a frame-encoded query string into rows, one nested frame per field", () => {
     const el = tableParser({ fields, default: valueB })
       .methods(vi.fn(), vi.fn())
       .html("id", valueASerialised, false);
@@ -64,7 +71,7 @@ describe("tableParser", () => {
     expect(expandableParser.getValue(expandableEl)).toStrictEqual(valueA);
   });
 
-  it("serialise joins each row's fields, then joins rows, using each field's own serialise", () => {
+  it("serialise frame-encodes each row's fields, then frame-encodes the rows", () => {
     const parser = tableParser({ fields, default: valueB }).methods(
       vi.fn(),
       vi.fn(() => valueA)
@@ -73,6 +80,25 @@ describe("tableParser", () => {
 
     expect(parser.serialise(true)).toBe(valueAShort);
     expect(parser.serialise(false)).toBe(valueASerialised);
+  });
+
+  it("frame-encodes a field as null when its own value matches its own default", () => {
+    const fieldsWithDefaults = tuple(
+      checkboxParser({ default: true }),
+      textParser({ default: "x" })
+    );
+    const parser = tableParser({
+      fields: fieldsWithDefaults,
+      default: [[true, "x"]],
+    }).methods(
+      vi.fn(),
+      vi.fn((): [boolean, string][] => [[true, "y"]])
+    );
+    parser.html("id", null, false);
+
+    expect(parser.serialise(false)).toBe(
+      encodeFrames([encodeFrames([null, "y"])])
+    );
   });
 
   it("expandable add/delete keep the rendered <tr><td> DOM in sync", () => {

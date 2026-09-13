@@ -1,21 +1,33 @@
-import type { InitParser, InitParserObject, Parser } from "./types.ts";
+import type {
+  AnyParserRecord,
+  AnyParserValue,
+  InitParser,
+  InitParserObject,
+  Parser,
+  ResolvedParserObject,
+  SiblingContext,
+} from "./types.ts";
 
-export const createParsers = <O extends Record<string, NonNullable<unknown>>>(
-  parsers: InitParserObject<O>
-) => parsers;
+export const createParsers = <O extends AnyParserRecord>(
+  parsers: InitParserObject<O, NoInfer<Partial<O>>>
+): ResolvedParserObject<O> => parsers;
 
-export const valueParser = <T extends NonNullable<unknown>>(
+export const valueParser = <
+  T extends AnyParserValue,
+  Cfg extends AnyParserRecord = AnyParserRecord,
+>(
   init: (
     onChange: (value: T) => void,
     getValue: () => T,
-    externalCfg?: { initial: T | null; default: T }
+    externalCfg?: { initial: T | null; default: T },
+    siblings?: SiblingContext<Cfg>
   ) => Required<Parser<T>>,
   label?: string,
   title?: string
-): InitParser<Required<Parser<T>>> => ({
+): InitParser<Required<Parser<T>>, Cfg> => ({
   label,
   title,
-  methods: init,
+  methods: init as InitParser<Required<Parser<T>>>["methods"],
 });
 
 export const contentParser = (
