@@ -70,7 +70,7 @@ export const ifParser = <
 
   return valueParser<V, BranchesCfg<Branches>>(
     ({ onChange, getValue, externalCfg, siblings }) => {
-      let activeIndex = -1;
+      let activeIndex: number | null = null;
       let active: { parser: Parser<AnyParserValue>; el: HTMLElement } | null =
         null;
 
@@ -101,8 +101,8 @@ export const ifParser = <
 
             wrapperEl.innerHTML = "";
 
-            const branch = branches[index] as (typeof branches)[number];
-            const parser = branch.parser.methods({
+            const init = branches.at(index)?.parser ?? cfg.otherwise;
+            const parser = init.methods({
               id,
               onChange: value => {
                 onChange(value as V);
