@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seriform — Live Demo</title>
+    <meta
+      name="description"
+      content="Interactive demo of Seriform, a lightweight library for turning form config into a rendered form that stays in sync with the URL."
+    />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="hero-inner">
+          <span class="badge">seriform</span>
+          <h1>Seriform</h1>
+          <p class="tagline">
+            Define a form once, get a rendered UI, a typed values object, and a
+            shareable URL — all from the same config.
+          </p>
+          <div class="hero-links">
+            <a
+              href="https://github.com/eniallator/Seriform"
+              target="_blank"
+              rel="noreferrer"
+              >GitHub</a
+            >
+            <a
+              href="https://www.npmjs.com/package/seriform"
+              target="_blank"
+              rel="noreferrer"
+              >npm</a
+            >
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="card form-panel">
+          <h2>Project launch config</h2>
+          <p class="card-hint">
+            Every field below is generated from a single
+            <code>createParsers</code>
+            call. Edit anything and watch the panels on the right update live.
+          </p>
+          <div id="config-ui"></div>
+        </section>
+
+        <aside class="sidebar">
+          <div class="card">
+            <h2>Share this config</h2>
+            <p class="card-hint">
+              Encodes every changed field into the URL query string.
+            </p>
+            <label class="short-url-toggle">
+              <input type="checkbox" id="short-url-toggle" />
+              Use short URLs
+            </label>
+            <button id="share-button" class="primary wrap-text">
+              Copy share link
+            </button>
+            <p id="share-status" class="share-status" hidden>Copied!</p>
+          </div>
+
+          <div class="card">
+            <h2>Shareable URL</h2>
+            <p class="card-hint">
+              <code>seriform.serialiseToUrlParams()</code>, live.
+            </p>
+            <code id="url-output" class="url-output"></code>
+          </div>
+
+          <div class="card">
+            <h2>Live values</h2>
+            <p class="card-hint">
+              <code>seriform.addListener(...)</code> fires on every change.
+            </p>
+            <pre id="values-output" class="values-output"></pre>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        <p>
+          This whole page — form, live JSON, and share link — is generated from
+          a single config object. See
+          <a
+            href="https://github.com/eniallator/Seriform/blob/main/demo/src/main.ts"
+            target="_blank"
+            rel="noreferrer"
+            >demo/src/main.ts</a
+          >.
+        </p>
+      </footer>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

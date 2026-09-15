@@ -39,6 +39,9 @@
   "scripts": {
     "test": "vitest run --passWithNoTests",
     "build": "tsc",
+    "demo": "vite demo",
+    "demo:build": "vite build demo",
+    "demo:preview": "vite preview demo",
     "lint": "oxlint src",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "format": "prettier --write .",
@@ -66,6 +69,7 @@
     "prettier": "^3.9.6",
     "publint": "^0.3.24",
     "typescript": "^7.0.2",
+    "vite": "^8.2.2",
     "vitest": "^4.1.11"
   }
 }
