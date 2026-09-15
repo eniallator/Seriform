@@ -33,14 +33,14 @@ export interface IfConfig<
 
 type BranchValue<B> = B extends IfBranch<any, infer V> ? V : never;
 
-type MergeRecords<U extends AnyParserRecord> = {
-  [K in U extends unknown ? keyof U : never]: U extends Record<K, infer V>
-    ? V
-    : never;
-};
+type BranchCfg<B> = B extends IfBranch<infer Cfg, any> ? Cfg : never;
 type BranchesCfg<Branches extends AnyBranches> =
-  Branches[number]["condition"] extends Condition<infer Cfg>
-    ? MergeRecords<Cfg>
+  BranchCfg<Branches[number]> extends infer Merged extends AnyParserRecord
+    ? {
+        [
+          K in Merged extends unknown ? keyof Merged : never
+        ]: Merged extends Record<K, infer V> ? V : never;
+      }
     : never;
 
 export const ifParser = <
@@ -55,17 +55,15 @@ export const ifParser = <
   type Id = keyof BranchesCfg<Branches>;
   type V = BranchValue<Branches[number]> | Otherwise;
 
-  const branches = cfg.branches
-    .map<{
-      id: Id | null;
-      test: ((value: AnyParserValue) => boolean) | null;
-      parser: InitParser<Parser<AnyParserValue>>;
-    }>(branch => ({
-      id: branch.condition.id,
-      test: branch.condition.test,
-      parser: branch.parser,
-    }))
-    .concat([{ id: null, test: null, parser: cfg.otherwise }]);
+  const branches = cfg.branches.map<{
+    id: Id;
+    test: (value: AnyParserValue) => boolean;
+    parser: InitParser<Parser<AnyParserValue>>;
+  }>(branch => ({
+    id: branch.condition.id,
+    test: branch.condition.test,
+    parser: branch.parser,
+  }));
   const ids = new Set(cfg.branches.map(branch => branch.condition.id as Id));
 
   return valueParser<V, BranchesCfg<Branches>>(
@@ -91,17 +89,16 @@ export const ifParser = <
           const evaluate = () => {
             const index =
               siblings == null
-                ? branches.length - 1
-                : branches.findIndex(
-                    ({ id, test }) =>
-                      id != null && test?.(siblings.getValue(id))
+                ? -1
+                : branches.findIndex(({ id, test }) =>
+                    test(siblings.getValue(id))
                   );
             if (index === activeIndex) return;
             activeIndex = index;
 
             wrapperEl.innerHTML = "";
 
-            const init = branches.at(index)?.parser ?? cfg.otherwise;
+            const init = branches[index]?.parser ?? cfg.otherwise;
             const parser = init.methods({
               id,
               onChange: value => {
