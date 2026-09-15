@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { checkboxParser, textParser } from "../value/index.ts";
-import { encodeFrames } from "./frames.ts";
+import { encodeArray } from "./encoding.ts";
 import { listParser } from "./list.ts";
 
 describe("listParser", () => {
@@ -12,12 +12,12 @@ describe("listParser", () => {
     );
 
   const valueA: string[] = ["Foo, Bar, Baz\\", "Hello World!"];
-  const valueASerialised = encodeFrames(valueA.map(v => encodeFrames([v])));
+  const valueASerialised = encodeArray(valueA.map(v => encodeArray([v])));
   const valueB: string[] = ["Test", "Other"];
 
   it("renders one <li> per item, wrapping the field's own html", () => {
     const el = listParser({ default: valueA, field })
-      .methods(vi.fn(), vi.fn())
+      .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
       .html("id", null, false);
 
     expect(getListValue(el)).toStrictEqual(valueA);
@@ -25,17 +25,18 @@ describe("listParser", () => {
 
   it("deserialises a query string into items via the field's own parsing", () => {
     const el = listParser({ field, default: valueB })
-      .methods(vi.fn(), vi.fn())
+      .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
       .html("id", valueASerialised, false);
 
     expect(getListValue(el)).toStrictEqual(valueA);
   });
 
   it("getValue reads current values back from the rendered <li> DOM", () => {
-    const parser = listParser({ field, default: valueA }).methods(
-      vi.fn(),
-      vi.fn()
-    );
+    const parser = listParser({ field, default: valueA }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     const el = parser.html("id", null, false);
 
     expect(parser.getValue(el)).toStrictEqual(valueA);
@@ -44,47 +45,49 @@ describe("listParser", () => {
       field,
       default: valueA,
       expandable: true,
-    }).methods(vi.fn(), vi.fn());
+    }).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
     const expandableEl = expandableParser.html("id", null, false);
     expect(expandableParser.getValue(expandableEl)).toStrictEqual(valueA);
   });
 
-  it("serialise frame-encodes each item's own serialise output", () => {
+  it("serialise array-encodes each item's own serialise output", () => {
     const parser = listParser({
       field: checkboxParser({}),
       default: [true, false],
-    }).methods(
-      vi.fn(),
-      vi.fn(() => [false, true])
-    );
+    }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => [false, true]),
+    });
     parser.html("id", null, false);
 
     expect(parser.serialise(true)).toBe(
-      encodeFrames([encodeFrames(["0"]), encodeFrames(["1"])])
+      encodeArray([encodeArray(["0"]), encodeArray(["1"])])
     );
     expect(parser.serialise(false)).toBe(
-      encodeFrames([encodeFrames(["false"]), encodeFrames(["true"])])
+      encodeArray([encodeArray(["false"]), encodeArray(["true"])])
     );
   });
 
-  it("frame-encodes an item as null when its own value matches its own default", () => {
+  it("array-encodes an item as null when its own value matches its own default", () => {
     const parser = listParser({
       field: checkboxParser({}),
       default: [true, false],
-    }).methods(
-      vi.fn(),
-      vi.fn(() => [true, true])
-    );
+    }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => [true, true]),
+    });
     parser.html("id", null, false);
 
     expect(parser.serialise(false)).toBe(
-      encodeFrames([encodeFrames([null]), encodeFrames(["true"])])
+      encodeArray([encodeArray([null]), encodeArray(["true"])])
     );
   });
 
   it("expandable add/delete keep the rendered <li> DOM in sync", () => {
     const added = listParser({ field, default: valueA, expandable: true })
-      .methods(vi.fn(), vi.fn())
+      .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
       .html("id", null, false);
     (
       added.querySelector("button[data-action=add]") as HTMLButtonElement
@@ -92,10 +95,11 @@ describe("listParser", () => {
     expect(getListValue(added)).toStrictEqual([...valueA, ""]);
 
     const deleted = listParser({ field, default: valueA, expandable: true })
-      .methods(
-        vi.fn(),
-        vi.fn(() => valueA)
-      )
+      .methods({
+        id: null,
+        onChange: vi.fn(),
+        getValue: vi.fn(() => valueA),
+      })
       .html("id", null, false);
     (
       deleted.querySelector("input[data-selector]") as HTMLInputElement
@@ -108,10 +112,11 @@ describe("listParser", () => {
 
   it("editing a rendered field's input updates the corresponding item", () => {
     const onChange = vi.fn();
-    const parser = listParser({ field, default: valueA }).methods(
+    const parser = listParser({ field, default: valueA }).methods({
+      id: null,
       onChange,
-      vi.fn(() => valueA)
-    );
+      getValue: vi.fn(() => valueA),
+    });
     const el = parser.html("id", null, false);
 
     const firstInput = el.querySelector(

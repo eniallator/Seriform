@@ -23,7 +23,7 @@ export const numberParser = (cfg: ValueConfig<number>) => {
     cfg.default ?? (cfg.attrs != null ? defaultNumber(cfg.attrs) : 0);
 
   return valueParser<number>(
-    (onChange, getValue, externalCfg) => ({
+    ({ onChange, getValue, externalCfg }) => ({
       serialise: () =>
         getValue() === (externalCfg?.default ?? defaultValue)
           ? null

@@ -11,7 +11,7 @@ describe("numberParser", () => {
     const parser = numberParser({
       default: valueA,
       attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn());
+    }).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
     const el = parser.html("id", null, false);
     expect(el.tagName).toBe("INPUT");
@@ -24,7 +24,12 @@ describe("numberParser", () => {
     expect(
       (
         numberParser({ default: valueB })
-          .methods(vi.fn(), vi.fn(), { initial: valueB, default: valueB })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: valueB, default: valueB },
+          })
           .html(null, `${valueA}`, false) as HTMLInputElement
       ).value
     ).toBe(`${valueA}`);
@@ -32,7 +37,12 @@ describe("numberParser", () => {
     expect(
       (
         numberParser({ default: valueB })
-          .methods(vi.fn(), vi.fn(), { initial: valueA, default: valueB })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: valueA, default: valueB },
+          })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(`${valueA}`);
@@ -40,7 +50,12 @@ describe("numberParser", () => {
     expect(
       (
         numberParser({ default: valueB })
-          .methods(vi.fn(), vi.fn(), { initial: null, default: valueA })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: null, default: valueA },
+          })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(`${valueA}`);
@@ -48,7 +63,7 @@ describe("numberParser", () => {
     expect(
       (
         numberParser({ default: valueA })
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(`${valueA}`);
@@ -56,7 +71,7 @@ describe("numberParser", () => {
     expect(
       (
         numberParser({})
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe("0");
@@ -64,31 +79,37 @@ describe("numberParser", () => {
     expect(
       (
         numberParser({ attrs: { min: "0", max: "100", step: "25" } })
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe("100");
   });
 
   it("serialise returns correct value for shortUrl", () => {
-    const parser = numberParser({}).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = numberParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     expect(parser.serialise(true)).toBe(`${valueAShort}`);
     expect(parser.serialise(false)).toBe(`${valueA}`);
 
-    const exponentialParser = numberParser({}).methods(
-      vi.fn(),
-      vi.fn(() => 100000000)
-    );
+    const exponentialParser = numberParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => 100000000),
+    });
 
     expect(exponentialParser.serialise(false)).toBe("1e%2B8");
   });
 
   it("html deserialises shortUrl properly", () => {
-    const parser = numberParser({}).methods(vi.fn(), vi.fn());
+    const parser = numberParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
 
     expect(
       parser.html(null, `${valueAShort}`, true).getAttribute("value")
@@ -99,19 +120,21 @@ describe("numberParser", () => {
   });
 
   it("serialise returns null if value matches default", () => {
-    const parser = numberParser({ default: valueA }).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = numberParser({ default: valueA }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {
-    const parser = numberParser({}).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = numberParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
     const el = document.createElement("input");
 
     parser.updateValue(el, false);
@@ -119,7 +142,11 @@ describe("numberParser", () => {
   });
 
   it("getValue returns expected value", () => {
-    const parser = numberParser({}).methods(vi.fn(), vi.fn());
+    const parser = numberParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     const el = document.createElement("input");
 
     el.value = `${valueA}`;
@@ -128,7 +155,11 @@ describe("numberParser", () => {
 
   it("html sets up onchange handler", () => {
     const onChange = vi.fn();
-    const parser = numberParser({}).methods(onChange, vi.fn());
+    const parser = numberParser({}).methods({
+      id: null,
+      onChange,
+      getValue: vi.fn(),
+    });
 
     const el = parser.html(null, null, false) as HTMLInputElement;
     el.value = `${valueA}`;

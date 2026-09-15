@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { contentParser, createParsers, valueParser } from "./create.ts";
-import { queryKey } from "./helpers.ts";
+import { hashKey } from "./helpers.ts";
 import { SeriForm } from "./seriForm.ts";
 import type { AnySiblingContext, InitParserObject } from "./types.ts";
 
@@ -14,7 +14,7 @@ interface CapturedFooFns {
 const makeParsers = (captured: CapturedFooFns) =>
   createParsers({
     foo: valueParser<string>(
-      (onChange, getValue, _externalCfg, siblings) => {
+      ({ onChange, getValue, siblings }) => {
         captured.onChange = onChange;
         captured.getValue = getValue;
         captured.siblings = siblings;
@@ -152,6 +152,43 @@ describe("SeriForm", () => {
     expect(cb).not.toHaveBeenCalled();
   });
 
+  // --- construction-time sibling reads ---
+  it("a field can synchronously read an earlier-declared sibling's value while building its own DOM", () => {
+    // Mirrors `ifParser`, which evaluates its condition (a synchronous `siblings.getValue`
+    // call) while building its own DOM, during `SeriForm`'s construction - i.e. before every
+    // field's state entry has necessarily been populated yet.
+    let siblingValueDuringConstruction: unknown;
+
+    const config = createParsers({
+      first: valueParser<string>(
+        () => ({
+          serialise: vi.fn(() => null),
+          getValue: vi.fn(() => "first-value"),
+          updateValue: vi.fn(),
+          html: vi.fn(() => document.createElement("input")),
+        }),
+        "First"
+      ),
+      second: valueParser<string>(
+        ({ siblings }) => ({
+          serialise: vi.fn(() => null),
+          getValue: vi.fn(() => "second-value"),
+          updateValue: vi.fn(),
+          html: vi.fn(() => {
+            siblingValueDuringConstruction = siblings?.getValue("first");
+            return document.createElement("input");
+          }),
+        }),
+        "Second"
+      ),
+    });
+
+    expect(
+      () => new SeriForm(config, document.createElement("div"), { query: "" })
+    ).not.toThrow();
+    expect(siblingValueDuringConstruction).toBe("first-value");
+  });
+
   // --- addCopyToClipboardHandler ---
   it("addCopyToClipboardHandler copies the share URL when clicked", () => {
     const writeText = vi.fn();
@@ -221,7 +258,7 @@ describe("SeriForm", () => {
       shortUrl: true,
     });
     expect(defaultHashLength.serialiseToUrlParams()).toBe(
-      `${queryKey("foo", 6)}serialised`
+      `${hashKey("foo", 6)}serialised`
     );
 
     const explicitHashLength = new SeriForm(makeParsers({}), baseEl, {
@@ -230,7 +267,7 @@ describe("SeriForm", () => {
       hashLength: 4,
     });
     expect(explicitHashLength.serialiseToUrlParams()).toBe(
-      `${queryKey("foo", 4)}serialised`
+      `${hashKey("foo", 4)}serialised`
     );
   });
 

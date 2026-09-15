@@ -11,7 +11,7 @@ describe("rangeParser", () => {
     const parser = rangeParser({
       default: valueA,
       attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn());
+    }).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
     const el = parser.html("id", null, false);
     expect(el.tagName).toBe("INPUT");
@@ -24,7 +24,12 @@ describe("rangeParser", () => {
     expect(
       (
         rangeParser({ default: valueB })
-          .methods(vi.fn(), vi.fn(), { initial: valueB, default: valueB })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: valueB, default: valueB },
+          })
           .html(null, `${valueA}`, false) as HTMLInputElement
       ).value
     ).toBe(`${valueA}`);
@@ -32,7 +37,12 @@ describe("rangeParser", () => {
     expect(
       (
         rangeParser({ default: valueB })
-          .methods(vi.fn(), vi.fn(), { initial: valueA, default: valueB })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: valueA, default: valueB },
+          })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(`${valueA}`);
@@ -40,7 +50,12 @@ describe("rangeParser", () => {
     expect(
       (
         rangeParser({ default: valueB })
-          .methods(vi.fn(), vi.fn(), { initial: null, default: valueA })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: null, default: valueA },
+          })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(`${valueA}`);
@@ -48,7 +63,7 @@ describe("rangeParser", () => {
     expect(
       (
         rangeParser({ default: valueA })
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(`${valueA}`);
@@ -56,24 +71,29 @@ describe("rangeParser", () => {
     expect(
       (
         rangeParser({})
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe("100");
   });
 
   it("serialise returns correct value for shortUrl", () => {
-    const parser = rangeParser({}).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = rangeParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     expect(parser.serialise(true)).toBe(`${valueAShort}`);
     expect(parser.serialise(false)).toBe(`${valueA}`);
   });
 
   it("html deserialises shortUrl properly", () => {
-    const parser = rangeParser({}).methods(vi.fn(), vi.fn());
+    const parser = rangeParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
 
     expect(
       parser.html(null, `${valueAShort}`, true).getAttribute("value")
@@ -84,19 +104,21 @@ describe("rangeParser", () => {
   });
 
   it("serialise returns null if value matches default", () => {
-    const parser = rangeParser({ default: valueA }).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = rangeParser({ default: valueA }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {
-    const parser = rangeParser({}).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = rangeParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
     const el = document.createElement("input");
 
     parser.updateValue(el, false);
@@ -104,7 +126,11 @@ describe("rangeParser", () => {
   });
 
   it("getValue returns expected value", () => {
-    const parser = rangeParser({}).methods(vi.fn(), vi.fn());
+    const parser = rangeParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     const el = document.createElement("input");
 
     el.value = `${valueA}`;
@@ -113,7 +139,11 @@ describe("rangeParser", () => {
 
   it("html sets up onchange handler", () => {
     const onChange = vi.fn();
-    const parser = rangeParser({}).methods(onChange, vi.fn());
+    const parser = rangeParser({}).methods({
+      id: null,
+      onChange,
+      getValue: vi.fn(),
+    });
 
     const el = parser.html(null, null, false) as HTMLInputElement;
     el.value = `${valueA}`;

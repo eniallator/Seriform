@@ -7,7 +7,7 @@ describe("checkboxParser", () => {
     const parser = checkboxParser({
       default: true,
       attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn());
+    }).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
     const el = parser.html("id", null, false);
     expect(el.tagName).toBe("INPUT");
@@ -20,7 +20,12 @@ describe("checkboxParser", () => {
     expect(
       (
         checkboxParser({ default: false })
-          .methods(vi.fn(), vi.fn(), { initial: false, default: false })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: false, default: false },
+          })
           .html(null, "true", false) as HTMLInputElement
       ).checked
     ).toBeTruthy();
@@ -28,7 +33,12 @@ describe("checkboxParser", () => {
     expect(
       (
         checkboxParser({ default: false })
-          .methods(vi.fn(), vi.fn(), { initial: true, default: false })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: true, default: false },
+          })
           .html(null, null, false) as HTMLInputElement
       ).checked
     ).toBeTruthy();
@@ -36,7 +46,12 @@ describe("checkboxParser", () => {
     expect(
       (
         checkboxParser({ default: false })
-          .methods(vi.fn(), vi.fn(), { initial: null, default: true })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: null, default: true },
+          })
           .html(null, null, false) as HTMLInputElement
       ).checked
     ).toBeTruthy();
@@ -44,7 +59,7 @@ describe("checkboxParser", () => {
     expect(
       (
         checkboxParser({ default: true })
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).checked
     ).toBeTruthy();
@@ -52,47 +67,51 @@ describe("checkboxParser", () => {
     expect(
       (
         checkboxParser({})
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).checked
     ).toBeFalsy();
   });
 
   it("serialise returns correct value for shortUrl", () => {
-    const parser = checkboxParser({}).methods(
-      vi.fn(),
-      vi.fn(() => true)
-    );
+    const parser = checkboxParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => true),
+    });
 
     expect(parser.serialise(true)).toBe("1");
     expect(parser.serialise(false)).toBe("true");
   });
 
   it("html uses query to set initial checked state", () => {
-    const parser = checkboxParser({ default: false }).methods(
-      vi.fn(),
-      vi.fn(() => false)
-    );
+    const parser = checkboxParser({ default: false }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => false),
+    });
 
     expect(parser.html(null, "1", true).hasAttribute("checked")).toBe(true);
     expect(parser.html(null, "true", false).hasAttribute("checked")).toBe(true);
   });
 
   it("serialise returns null if value matches default", () => {
-    const parser = checkboxParser({ default: true }).methods(
-      vi.fn(),
-      vi.fn(() => true)
-    );
+    const parser = checkboxParser({ default: true }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => true),
+    });
 
     expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets or removes checked attribute", () => {
     let externalValue: boolean;
-    const parser = checkboxParser({}).methods(
-      vi.fn(),
-      vi.fn(() => externalValue)
-    );
+    const parser = checkboxParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => externalValue),
+    });
     const el = document.createElement("input");
 
     externalValue = true;
@@ -105,7 +124,11 @@ describe("checkboxParser", () => {
   });
 
   it("getValue returns true if checked attribute is present", () => {
-    const parser = checkboxParser({}).methods(vi.fn(), vi.fn());
+    const parser = checkboxParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     const el = document.createElement("input");
 
     el.setAttribute("checked", "");
@@ -117,7 +140,11 @@ describe("checkboxParser", () => {
 
   it("html sets up onchange handler", () => {
     const onChange = vi.fn();
-    const parser = checkboxParser({}).methods(onChange, vi.fn());
+    const parser = checkboxParser({}).methods({
+      id: null,
+      onChange,
+      getValue: vi.fn(),
+    });
 
     const el = parser.html(null, null, false) as HTMLInputElement;
     el.checked = true;

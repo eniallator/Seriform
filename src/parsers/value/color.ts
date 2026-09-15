@@ -12,7 +12,7 @@ export const colorParser = (cfg: ValueConfig<string>) => {
   const defaultValue = cfg.default ?? "000000";
 
   return valueParser<string>(
-    (onChange, getValue, externalCfg) => ({
+    ({ onChange, getValue, externalCfg }) => ({
       serialise: shortUrl =>
         getValue() === (externalCfg?.default ?? defaultValue)
           ? null

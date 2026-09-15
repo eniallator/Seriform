@@ -37,11 +37,13 @@ const newRowFactory =
       `<li>${expandable ? '<input data-selector type="checkbox" />' : ""}</li>`
     );
 
-    const parser = initParser.methods(
+    const parser = initParser.methods({
+      id: null,
       onChange,
       getValue,
-      defaultValue != null ? { initial, default: defaultValue } : undefined
-    );
+      externalCfg:
+        defaultValue != null ? { initial, default: defaultValue } : undefined,
+    });
 
     itemEl.appendChild(parser.html(null, queryItems?.[0] ?? null, shortUrl));
 

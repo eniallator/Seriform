@@ -6,7 +6,7 @@ import {
   type CollectionAdapter,
   type CollectionConfig,
 } from "./base.ts";
-import { encodeFrames } from "./frames.ts";
+import { encodeArray } from "./encoding.ts";
 
 /**
  * The row "handle" mirrors what a real Parser exposes: `el` to read the rendered DOM value from (used
@@ -69,7 +69,7 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       { default: ["a"], title: "A hint", label: "My Label" },
       fakeAdapter()
-    ).methods(vi.fn(), vi.fn());
+    ).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
     const el = parser.html("my-id", null, false);
 
@@ -84,7 +84,7 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       { default: [], initialCollapsed: true, attrs: { class: "extra" } },
       fakeAdapter()
-    ).methods(vi.fn(), vi.fn());
+    ).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
     const el = parser.html(null, null, false);
 
@@ -95,7 +95,7 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(vi.fn(), vi.fn());
+    ).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
     const el = parser.html(null, null, false);
 
     expect(el.classList.contains("collapsed")).toBe(false);
@@ -109,7 +109,7 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(vi.fn(), vi.fn());
+    ).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
     const el = parser.html(null, null, false);
 
     expect(getRowInputs(el).map(input => input.value)).toStrictEqual([
@@ -120,29 +120,39 @@ describe("collectionParser", () => {
 
   it("prefers external initial, then external default, then cfg default", () => {
     const withInitial = collectionParser<string, FakeRow>(cfg, fakeAdapter())
-      .methods(vi.fn(), vi.fn(), { initial: ["x"], default: ["y"] })
+      .methods({
+        id: null,
+        onChange: vi.fn(),
+        getValue: vi.fn(),
+        externalCfg: { initial: ["x"], default: ["y"] },
+      })
       .html(null, null, false);
     expect(getRowInputs(withInitial).map(input => input.value)).toStrictEqual([
       "x",
     ]);
 
     const withoutInitial = collectionParser<string, FakeRow>(cfg, fakeAdapter())
-      .methods(vi.fn(), vi.fn(), { initial: null, default: ["y"] })
+      .methods({
+        id: null,
+        onChange: vi.fn(),
+        getValue: vi.fn(),
+        externalCfg: { initial: null, default: ["y"] },
+      })
       .html(null, null, false);
     expect(
       getRowInputs(withoutInitial).map(input => input.value)
     ).toStrictEqual(["y"]);
   });
 
-  it("parses the query into one row per frame, decoding each row's own nested frames", () => {
+  it("parses the query into one row per array, decoding each row's own nested arrays", () => {
     const parser = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(vi.fn(), vi.fn());
+    ).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
-    const query = encodeFrames([
-      encodeFrames(["1", "2"]),
-      encodeFrames(["3", "4"]),
+    const query = encodeArray([
+      encodeArray(["1", "2"]),
+      encodeArray(["3", "4"]),
     ]);
     const el = parser.html(null, query, false);
 
@@ -152,13 +162,13 @@ describe("collectionParser", () => {
     ]);
   });
 
-  it("treats a null row frame as an empty row, falling back to that row's default", () => {
+  it("treats a null row array as an empty row, falling back to that row's default", () => {
     const parser = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(vi.fn(), vi.fn());
+    ).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
-    const query = encodeFrames([null, encodeFrames(["3"])]);
+    const query = encodeArray([null, encodeArray(["3"])]);
     const el = parser.html(null, query, false);
 
     expect(getRowInputs(el).map(input => input.value)).toStrictEqual([
@@ -171,35 +181,37 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(vi.fn(), vi.fn());
+    ).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
     const el = parser.html(null, null, false);
 
     expect(parser.getValue(el)).toStrictEqual(["a", "b"]);
   });
 
-  it("serialise returns null when the value matches default, else frame-encodes serialiseRow", () => {
+  it("serialise returns null when the value matches default, else array-encodes serialiseRow", () => {
     const matching = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(
-      vi.fn(),
-      vi.fn(() => ["a", "b"])
-    );
+    ).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => ["a", "b"]),
+    });
     expect(matching.serialise(false)).toBeNull();
 
     const differing = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(
-      vi.fn(),
-      vi.fn(() => ["x", "y"])
-    );
+    ).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => ["x", "y"]),
+    });
     differing.html(null, null, false);
     expect(differing.serialise(false)).toBe(
-      encodeFrames([encodeFrames(["x"]), encodeFrames(["y"])])
+      encodeArray([encodeArray(["x"]), encodeArray(["y"])])
     );
     expect(differing.serialise(true)).toBe(
-      encodeFrames([encodeFrames(["x!"]), encodeFrames(["y!"])])
+      encodeArray([encodeArray(["x!"]), encodeArray(["y!"])])
     );
   });
 
@@ -207,10 +219,11 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(
-      vi.fn(),
-      vi.fn(() => ["x", "y", "z"])
-    );
+    ).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => ["x", "y", "z"]),
+    });
     const el = parser.html(null, null, false);
 
     parser.updateValue(el, false);
@@ -227,10 +240,11 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       cfg,
       fakeAdapter()
-    ).methods(
+    ).methods({
+      id: null,
       onChange,
-      vi.fn(() => ["a", "b"])
-    );
+      getValue: vi.fn(() => ["a", "b"]),
+    });
     const el = parser.html(null, null, false);
 
     const second = getRowInputs(el)[1] ?? raise(new Error("No row found"));
@@ -248,7 +262,7 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       { default: ["x", "y", "z"], expandable: true },
       fakeAdapter()
-    ).methods(onChange, () => state);
+    ).methods({ id: null, onChange, getValue: () => state });
     const el = parser.html(null, null, false);
 
     const firstRow = getRowElements(el)[0] ?? raise(new Error("No row found"));
@@ -279,10 +293,11 @@ describe("collectionParser", () => {
     const parser = collectionParser<string, FakeRow>(
       { default: ["a", "b"], expandable: true },
       fakeAdapter()
-    ).methods(
+    ).methods({
+      id: null,
       onChange,
-      vi.fn(() => ["a", "b"])
-    );
+      getValue: vi.fn(() => ["a", "b"]),
+    });
     const el = parser.html(null, null, false);
 
     (el.querySelector("button[data-action=add]") as HTMLButtonElement).click();
@@ -297,7 +312,7 @@ describe("collectionParser", () => {
 
   it("only renders actions when expandable", () => {
     const notExpandable = collectionParser<string, FakeRow>(cfg, fakeAdapter())
-      .methods(vi.fn(), vi.fn())
+      .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
       .html(null, null, false);
     expect(notExpandable.querySelector(".actions")).toBeNull();
 
@@ -305,7 +320,7 @@ describe("collectionParser", () => {
       { ...cfg, expandable: true },
       fakeAdapter()
     )
-      .methods(vi.fn(), vi.fn())
+      .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
       .html(null, null, false);
     expect(expandable.querySelector(".actions")).not.toBeNull();
   });

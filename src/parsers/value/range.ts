@@ -8,7 +8,7 @@ export const rangeParser = (cfg: ValueConfig<number>) => {
   const defaultValue = cfg.default ?? defaultNumber(cfg.attrs);
 
   return valueParser<number>(
-    (onChange, getValue, externalCfg) => ({
+    ({ onChange, getValue, externalCfg }) => ({
       serialise: () =>
         getValue() === (externalCfg?.default ?? defaultValue)
           ? null

@@ -12,7 +12,7 @@ describe("datetimeParser", () => {
     const parser = datetimeParser({
       default: new Date(valueA),
       attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn());
+    }).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
     const el = parser.html("id", null, false);
     expect(el.tagName).toBe("INPUT");
@@ -25,9 +25,14 @@ describe("datetimeParser", () => {
     expect(
       (
         datetimeParser({ default: new Date(valueB) })
-          .methods(vi.fn(), vi.fn(), {
-            initial: new Date(valueB),
-            default: new Date(valueB),
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: {
+              initial: new Date(valueB),
+              default: new Date(valueB),
+            },
           })
           .html(null, valueA, false) as HTMLInputElement
       ).value
@@ -36,9 +41,14 @@ describe("datetimeParser", () => {
     expect(
       (
         datetimeParser({ default: new Date(valueB) })
-          .methods(vi.fn(), vi.fn(), {
-            initial: new Date(valueA),
-            default: new Date(valueB),
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: {
+              initial: new Date(valueA),
+              default: new Date(valueB),
+            },
           })
           .html(null, null, false) as HTMLInputElement
       ).value
@@ -47,9 +57,14 @@ describe("datetimeParser", () => {
     expect(
       (
         datetimeParser({ default: new Date(valueB) })
-          .methods(vi.fn(), vi.fn(), {
-            initial: null,
-            default: new Date(valueA),
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: {
+              initial: null,
+              default: new Date(valueA),
+            },
           })
           .html(null, null, false) as HTMLInputElement
       ).value
@@ -58,7 +73,7 @@ describe("datetimeParser", () => {
     expect(
       (
         datetimeParser({ default: new Date(valueA) })
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(valueA);
@@ -66,24 +81,29 @@ describe("datetimeParser", () => {
     expect(
       (
         datetimeParser({})
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(formatLocaleDate(new Date(0)));
   });
 
   it("serialise returns correct value for shortUrl", () => {
-    const parser = datetimeParser({}).methods(
-      vi.fn(),
-      vi.fn(() => new Date(valueA))
-    );
+    const parser = datetimeParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => new Date(valueA)),
+    });
 
     expect(parser.serialise(true)).toBe(valueAShort);
     expect(parser.serialise(false)).toBe(`${valueA}.000Z`);
   });
 
   it("html deserialises shortUrl properly", () => {
-    const parser = datetimeParser({}).methods(vi.fn(), vi.fn());
+    const parser = datetimeParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
 
     expect(parser.html(null, valueAShort, true).getAttribute("value")).toBe(
       valueA
@@ -92,19 +112,21 @@ describe("datetimeParser", () => {
   });
 
   it("serialise returns null if value matches default", () => {
-    const parser = datetimeParser({ default: new Date(valueA) }).methods(
-      vi.fn(),
-      vi.fn(() => new Date(valueA))
-    );
+    const parser = datetimeParser({ default: new Date(valueA) }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => new Date(valueA)),
+    });
 
     expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {
-    const parser = datetimeParser({}).methods(
-      vi.fn(),
-      vi.fn(() => new Date(valueA))
-    );
+    const parser = datetimeParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => new Date(valueA)),
+    });
     const el = document.createElement("input");
 
     parser.updateValue(el, false);
@@ -112,7 +134,11 @@ describe("datetimeParser", () => {
   });
 
   it("getValue returns expected value", () => {
-    const parser = datetimeParser({}).methods(vi.fn(), vi.fn());
+    const parser = datetimeParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     const el = document.createElement("input");
 
     el.value = valueA;
@@ -121,7 +147,11 @@ describe("datetimeParser", () => {
 
   it("html sets up onchange handler", () => {
     const onChange = vi.fn();
-    const parser = datetimeParser({}).methods(onChange, vi.fn());
+    const parser = datetimeParser({}).methods({
+      id: null,
+      onChange,
+      getValue: vi.fn(),
+    });
 
     const el = parser.html(null, null, false) as HTMLInputElement;
     el.value = valueA;

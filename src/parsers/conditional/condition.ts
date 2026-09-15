@@ -1,8 +1,5 @@
 import type { AnyParserRecord, AnyParserValue } from "../../types.ts";
 
-// Backed by a single-key `Record` rather than separate `Id`/`T` generics so several conditions'
-// `Cfg`s can be merged into one combined sibling shape just by unioning them - see `if.ts`'s
-// `BranchesCfg`.
 export interface Condition<Cfg extends AnyParserRecord> {
   id: keyof Cfg;
   test: (value: Cfg[keyof Cfg]) => boolean;

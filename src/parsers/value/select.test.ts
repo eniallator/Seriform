@@ -6,7 +6,7 @@ import { selectParser } from "./select.ts";
 describe("selectParser", () => {
   const options = tuple("Hello", "World!", "Foo Bar", "Test");
   const valueA = "Foo Bar" as const;
-  const valueAShort = valueA;
+  const valueAShort = "F5";
   const valueB = "Test" as const;
 
   it("creates the input with given attributes and default value", () => {
@@ -14,7 +14,7 @@ describe("selectParser", () => {
       default: valueA,
       options,
       attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn());
+    }).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
     const el = parser.html("id", null, false) as HTMLSelectElement;
     expect(el.tagName).toBe("SELECT");
@@ -27,7 +27,12 @@ describe("selectParser", () => {
     expect(
       (
         selectParser({ default: valueB, options })
-          .methods(vi.fn(), vi.fn(), { initial: valueB, default: valueB })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: valueB, default: valueB },
+          })
           .html(null, valueA, false) as HTMLInputElement
       ).value
     ).toBe(valueA);
@@ -35,7 +40,12 @@ describe("selectParser", () => {
     expect(
       (
         selectParser({ default: valueB, options })
-          .methods(vi.fn(), vi.fn(), { initial: valueA, default: valueB })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: valueA, default: valueB },
+          })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(valueA);
@@ -43,7 +53,12 @@ describe("selectParser", () => {
     expect(
       (
         selectParser({ default: valueB, options })
-          .methods(vi.fn(), vi.fn(), { initial: null, default: valueA })
+          .methods({
+            id: null,
+            onChange: vi.fn(),
+            getValue: vi.fn(),
+            externalCfg: { initial: null, default: valueA },
+          })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(valueA);
@@ -51,7 +66,7 @@ describe("selectParser", () => {
     expect(
       (
         selectParser({ default: valueA, options })
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe(valueA);
@@ -59,24 +74,29 @@ describe("selectParser", () => {
     expect(
       (
         selectParser({ options })
-          .methods(vi.fn(), vi.fn())
+          .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
           .html(null, null, false) as HTMLInputElement
       ).value
     ).toBe("Hello");
   });
 
   it("serialise returns correct value for shortUrl", () => {
-    const parser = selectParser({ options }).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = selectParser({ options }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     expect(parser.serialise(true)).toBe(valueAShort);
     expect(parser.serialise(false)).toBe(valueA);
   });
 
   it("html deserialises shortUrl properly", () => {
-    const parser = selectParser({ options }).methods(vi.fn(), vi.fn());
+    const parser = selectParser({ options }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
 
     expect(
       (parser.html(null, valueAShort, true) as HTMLSelectElement).value
@@ -87,19 +107,21 @@ describe("selectParser", () => {
   });
 
   it("serialise returns null if value matches default", () => {
-    const parser = selectParser({ default: valueA, options }).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = selectParser({ default: valueA, options }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     expect(parser.serialise(false)).toBeNull();
   });
 
   it("updateValue sets the value", () => {
-    const parser = selectParser({ options }).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = selectParser({ options }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
     const el = document.createElement("input");
 
     parser.updateValue(el, false);
@@ -107,7 +129,11 @@ describe("selectParser", () => {
   });
 
   it("getValue returns expected value", () => {
-    const parser = selectParser({ options }).methods(vi.fn(), vi.fn());
+    const parser = selectParser({ options }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     const el = document.createElement("input");
 
     el.value = valueA;
@@ -116,7 +142,11 @@ describe("selectParser", () => {
 
   it("html sets up onchange handler", () => {
     const onChange = vi.fn();
-    const parser = selectParser({ options }).methods(onChange, vi.fn());
+    const parser = selectParser({ options }).methods({
+      id: null,
+      onChange,
+      getValue: vi.fn(),
+    });
 
     const el = parser.html(null, null, false) as HTMLInputElement;
     el.value = valueA;

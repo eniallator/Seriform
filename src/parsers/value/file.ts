@@ -7,7 +7,7 @@ export const fileParser = (cfg: ValueConfig<string> & { text?: string }) => {
   const defaultValue = cfg.default ?? "";
 
   return valueParser<string>(
-    (onChange, getValue, externalCfg) => {
+    ({ onChange, getValue, externalCfg }) => {
       let currentValue = defaultValue;
 
       return {

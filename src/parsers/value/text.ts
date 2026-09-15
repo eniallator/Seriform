@@ -7,7 +7,7 @@ export const textParser = (cfg: ValueConfig<string> & { area?: boolean }) => {
   const defaultValue = cfg.default ?? "";
 
   return valueParser<string>(
-    (onChange, getValue, externalCfg) => ({
+    ({ onChange, getValue, externalCfg }) => ({
       serialise: () =>
         getValue() === (externalCfg?.default ?? defaultValue)
           ? null

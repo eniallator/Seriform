@@ -10,10 +10,11 @@ describe("buttonParser", () => {
       attrs: { "data-hello": "world!" },
     });
     const el = parser
-      .methods(
-        vi.fn(),
-        vi.fn((): never => null as never)
-      )
+      .methods({
+        id: null,
+        onChange: vi.fn(),
+        getValue: vi.fn((): never => null as never),
+      })
       .html("btn-id", null, false);
 
     expect(el.tagName).toBe("BUTTON");
@@ -27,10 +28,11 @@ describe("buttonParser", () => {
     const parser = buttonParser({});
     const onChange = vi.fn();
     const el = parser
-      .methods(
+      .methods({
+        id: null,
         onChange,
-        vi.fn((): never => null as never)
-      )
+        getValue: vi.fn((): never => null as never),
+      })
       .html("id", null, false);
 
     el.click();
@@ -41,10 +43,11 @@ describe("buttonParser", () => {
   it("should have defaults with an empty object", () => {
     const parser = buttonParser({});
     const el = parser
-      .methods(
-        vi.fn(),
-        vi.fn((): never => null as never)
-      )
+      .methods({
+        id: null,
+        onChange: vi.fn(),
+        getValue: vi.fn((): never => null as never),
+      })
       .html(null, null, false);
 
     expect(el.tagName).toBe("BUTTON");

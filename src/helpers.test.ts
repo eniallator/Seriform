@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { configItem, parseQuery, queryKey } from "./helpers.ts";
+import { configItem, hashKey, parseQuery } from "./helpers.ts";
 
 describe("configItem", () => {
   it("wraps the element with label and title", () => {
@@ -25,16 +25,16 @@ describe("configItem", () => {
   });
 });
 
-describe("queryKey", () => {
+describe("hashKey", () => {
   it("URL-encodes the key when there's no hash length", () => {
-    expect(queryKey("hello world", null)).toBe("hello%20world");
+    expect(hashKey("hello world", null)).toBe("hello%20world");
   });
 
   it("hashes the key to a fixed-length base64 string when given a hash length", () => {
-    const result = queryKey("hello", 6);
+    const result = hashKey("hello", 6);
     expect(result).toHaveLength(6);
-    expect(queryKey("hello", 6)).toBe(result);
-    expect(queryKey("goodbye", 6)).not.toBe(result);
+    expect(hashKey("hello", 6)).toBe(result);
+    expect(hashKey("goodbye", 6)).not.toBe(result);
   });
 });
 
@@ -54,7 +54,7 @@ describe("parseQuery", () => {
   });
 
   it("parses fixed-length hashed keys", () => {
-    const key = queryKey("field", 6);
+    const key = hashKey("field", 6);
     expect(parseQuery(`${key}value`, 6)).toStrictEqual({ [key]: "value" });
   });
 });

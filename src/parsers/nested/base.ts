@@ -4,7 +4,7 @@ import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
 import type { Config } from "../config.ts";
-import { decodeFrames, encodeFrames } from "./frames.ts";
+import { decodeArray, encodeArray } from "./encoding.ts";
 
 export interface NewRowParams<Item> {
   queryItems?: (string | null)[];
@@ -71,7 +71,7 @@ export const collectionParser = <Item extends NonNullable<unknown>, Row>(
     .filter(isUnionOf(isString, isNumber))
     .join(" ");
 
-  return valueParser<Item[]>((onChange, getValue, externalCfg) => {
+  return valueParser<Item[]>(({ onChange, getValue, externalCfg }) => {
     const isDefault = isExact(externalCfg?.default ?? cfg.default);
     let rows: Row[] = [];
 
@@ -96,8 +96,8 @@ export const collectionParser = <Item extends NonNullable<unknown>, Row>(
       serialise: shortUrl =>
         isDefault(getValue())
           ? null
-          : encodeFrames(
-              rows.map(row => encodeFrames(adapter.serialiseRow(row, shortUrl)))
+          : encodeArray(
+              rows.map(row => encodeArray(adapter.serialiseRow(row, shortUrl)))
             ),
       getValue: el => adapter.getValues(el, rows, expandable),
       updateValue: (el, shortUrl) => {
@@ -146,14 +146,14 @@ export const collectionParser = <Item extends NonNullable<unknown>, Row>(
         const create = createRow(containerEl);
         const params = rowParams(shortUrl);
 
-        const rowQueries = query != null ? decodeFrames(query) : [];
+        const rowQueries = query != null ? decodeArray(query) : [];
 
         rows =
           rowQueries.length === cfg.default.length ||
           (expandable && rowQueries.length > 0)
             ? rowQueries.map((rowQuery, i) =>
                 create({
-                  queryItems: rowQuery != null ? decodeFrames(rowQuery) : [],
+                  queryItems: rowQuery != null ? decodeArray(rowQuery) : [],
                   ...params(i),
                 })
               )

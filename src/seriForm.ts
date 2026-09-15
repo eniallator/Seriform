@@ -5,16 +5,21 @@ import { mapFilter, Option } from "niall-utils/functional";
 import { dom } from "niall-utils/ui";
 
 import { FieldRegistry } from "./fieldRegistry.ts";
-import { configItem, parseQuery, queryKey } from "./helpers.ts";
-import type { InitParserObject, Parser } from "./types.ts";
+import { configItem, hashKey, parseQuery } from "./helpers.ts";
+import type {
+  AnyParserRecord,
+  AnyParserValue,
+  InitParserObject,
+  Parser,
+} from "./types.ts";
 
-interface StateItem<T extends NonNullable<unknown>> {
+interface StateItem<T extends AnyParserValue> {
   parser: Parser<T>;
   value: T;
   el: HTMLElement;
 }
 
-type State<R extends Record<string, NonNullable<unknown>>> = {
+type State<R extends AnyParserRecord> = {
   [K in keyof R]: StateItem<R[K]>;
 };
 
@@ -27,7 +32,7 @@ type SeriFormInternalOptions = {
   query: string;
 } & UnionToPartial<SeriFormShortUrlOptions>;
 
-export class SeriForm<const R extends Record<string, NonNullable<unknown>>> {
+export class SeriForm<const R extends AnyParserRecord> {
   private readonly hashLength: number | null;
   private readonly state: State<R>;
   private readonly registry = new FieldRegistry();
@@ -46,35 +51,39 @@ export class SeriForm<const R extends Record<string, NonNullable<unknown>>> {
 
     const initialValues = parseQuery(query, this.hashLength);
 
-    this.state = mapObject(initParsers, ([id, initParser]): Entry<State<R>> => {
-      const { label, title, methods } = initParser;
-      const parser = methods(
-        value => {
-          if (value != null) this.state[id].value = value;
-          this.registry.notify(id as string, this.state[id].value);
-        },
-        () => this.state[id].value,
-        undefined,
-        this.registry.context()
-      );
+    this.state = mapObject(initParsers, ([id]): Entry<State<R>> =>
+      tuple(id, {} as State<R>[typeof id])
+    );
 
-      const key = queryKey(id as string, this.hashLength);
+    for (const id in initParsers) {
+      const { label, title, methods } = initParsers[id];
+      const parser = methods({
+        id: id,
+        onChange: value => {
+          if (value != null) this.state[id].value = value;
+          this.registry.notify(id, this.state[id].value);
+        },
+        getValue: () => this.state[id].value,
+        siblings: this.registry.context(),
+      });
+
+      const key = hashKey(id, this.hashLength);
       const query = initialValues[key] ?? null;
-      const el = parser.html(id as string, query, shortUrl ?? false);
+      const el = parser.html(id, query, shortUrl ?? false);
       baseEl.appendChild(configItem(id as string, el, label, title));
       const value = parser.getValue(el);
 
-      this.registry.register(id as string, () => this.state[id].value);
-      this.registry.subscribe(id as string, () => {
+      this.state[id] = { parser, el, value };
+
+      this.registry.register(id, () => this.state[id].value);
+      this.registry.subscribe(id, () => {
         this.tellListeners(id);
       });
+    }
 
-      return tuple(id, { parser, el, value });
-    });
-
-    typedToEntries(this.state).forEach(([id, { value }]) => {
-      this.registry.notify(id as string, value);
-    });
+    for (const id in this.state) {
+      this.registry.notify(id, this.state[id].value);
+    }
   }
 
   getAllValues(): R {
@@ -103,16 +112,16 @@ export class SeriForm<const R extends Record<string, NonNullable<unknown>>> {
   }
 
   tellListeners(id?: keyof R): void {
-    this.listeners.forEach(({ subscriptions, callback }) => {
+    for (const { subscriptions, callback } of this.listeners) {
       if (id == null || subscriptions.size === 0 || subscriptions.has(id)) {
         callback(this.getAllValues(), id);
       }
-    });
+    }
   }
 
   serialiseToUrlParams(): string {
     const urlPart = (key: string, value: string | Base64): string =>
-      [queryKey(key, this.hashLength), encodeURIComponent(value)].join(
+      [hashKey(key, this.hashLength), encodeURIComponent(value)].join(
         this.hashLength != null ? "" : "="
       );
 

@@ -46,12 +46,12 @@ describe("ifParser", () => {
 
   it("defaults to otherwise immediately, before any sibling broadcast resolves", () => {
     const siblings = makeSiblings();
-    const parser = buildParser().methods(
-      vi.fn(),
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     expect(el.children).toHaveLength(1);
@@ -60,7 +60,11 @@ describe("ifParser", () => {
   });
 
   it("defaults to otherwise when no siblings context is available at all", () => {
-    const parser = buildParser().methods(vi.fn(), vi.fn(), undefined);
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     const el = parser.html("conditional", null, false);
 
     expect(el.children).toHaveLength(1);
@@ -71,12 +75,12 @@ describe("ifParser", () => {
   it("mounts the first matching branch and reports its value", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("plan", "pro");
@@ -88,12 +92,12 @@ describe("ifParser", () => {
 
   it("switches branches, tearing down the old element and mounting the new one", () => {
     const siblings = makeSiblings();
-    const parser = buildParser().methods(
-      vi.fn(),
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("plan", "pro");
@@ -108,12 +112,12 @@ describe("ifParser", () => {
   it("does nothing when notified with a value that keeps the same branch active", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("plan", "pro");
@@ -128,12 +132,12 @@ describe("ifParser", () => {
 
   it("falls back to otherwise when no branch matches", () => {
     const siblings = makeSiblings();
-    const parser = buildParser().methods(
-      vi.fn(),
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("plan", "free");
@@ -145,12 +149,12 @@ describe("ifParser", () => {
   it("switches from an active branch back to otherwise when it stops matching", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("plan", "pro");
@@ -175,7 +179,12 @@ describe("ifParser", () => {
         },
       ],
       otherwise: textParser({ default: "fallback" }),
-    }).methods(vi.fn(), vi.fn(), undefined, siblings.context);
+    }).methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("seats", 5);
@@ -192,12 +201,12 @@ describe("ifParser", () => {
   it("forwards the active child's onChange", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      () => "",
-      undefined,
-      siblings.context
-    );
+      getValue: () => "",
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
     siblings.trigger("plan", "pro");
     onChange.mockClear();
@@ -212,12 +221,12 @@ describe("ifParser", () => {
   it("updateValue delegates to whichever child is currently active", () => {
     const siblings = makeSiblings();
     let currentValue = "";
-    const parser = buildParser().methods(
-      vi.fn(),
-      () => currentValue,
-      undefined,
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: () => currentValue,
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     expect(() => {
@@ -234,12 +243,12 @@ describe("ifParser", () => {
   it("serialise delegates to whichever child is currently active", () => {
     const siblings = makeSiblings();
     let currentValue = "fallback";
-    const parser = buildParser().methods(
-      vi.fn(),
-      () => currentValue,
-      undefined,
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: () => currentValue,
+      siblings: siblings.context,
+    });
     parser.html("conditional", null, false);
 
     // otherwise is active by default, and "fallback" matches its own default.
@@ -266,7 +275,12 @@ describe("ifParser", () => {
       otherwise: textParser({ default: "fallback" }),
       title: "A hint",
       attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn(), undefined, siblings.context);
+    }).methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
     siblings.trigger("plan", "pro");
 
@@ -278,12 +292,13 @@ describe("ifParser", () => {
 
   it("forwards externalCfg's initial value to whichever branch becomes active", () => {
     const siblings = makeSiblings();
-    const parser = buildParser().methods(
-      vi.fn(),
-      vi.fn(),
-      { initial: "Alice", default: "" },
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      externalCfg: { initial: "Alice", default: "" },
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
     siblings.trigger("plan", "pro");
 
@@ -292,12 +307,13 @@ describe("ifParser", () => {
 
   it("falls back to externalCfg's default when initial is null", () => {
     const siblings = makeSiblings();
-    const parser = buildParser().methods(
-      vi.fn(),
-      vi.fn(),
-      { initial: null, default: "Fallback" },
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      externalCfg: { initial: null, default: "Fallback" },
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
     siblings.trigger("plan", "pro");
 

@@ -46,15 +46,17 @@ const newRowFactory =
     );
 
     const parsers = initParsers.map(({ methods }, i) => {
-      const parser = methods(
-        (value: F[number]) => {
+      const parser = methods({
+        id: null,
+        onChange: (value: F[number]) => {
           onChange(getValue().with(i, value) as unknown as F);
         },
-        () => getValue()[i] as F[number],
-        defaultValue?.[i] != null
-          ? { initial: initial?.[i] ?? null, default: defaultValue[i] }
-          : undefined
-      );
+        getValue: () => getValue()[i] as F[number],
+        externalCfg:
+          defaultValue?.[i] != null
+            ? { initial: initial?.[i] ?? null, default: defaultValue[i] }
+            : undefined,
+      });
 
       const td = document.createElement("td");
       td.appendChild(parser.html(null, queryItems?.[i] ?? null, shortUrl));

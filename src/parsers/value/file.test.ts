@@ -11,7 +11,7 @@ describe("fileParser", () => {
     const parser = fileParser({
       default: valueA,
       attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn());
+    }).methods({ id: null, onChange: vi.fn(), getValue: vi.fn() });
 
     const el = parser.html("id", null, false);
     expect(el.tagName).toBe("DIV");
@@ -19,59 +19,69 @@ describe("fileParser", () => {
   });
 
   it("initial state is expected", () => {
-    const queryActual = fileParser({ default: valueB }).methods(
-      vi.fn(),
-      vi.fn(),
-      { initial: valueB, default: valueB }
-    );
+    const queryActual = fileParser({ default: valueB }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      externalCfg: { initial: valueB, default: valueB },
+    });
     expect(queryActual.getValue(queryActual.html(null, valueA, true))).toBe(
       valueA
     );
 
-    const initialActual = fileParser({ default: valueB }).methods(
-      vi.fn(),
-      vi.fn(),
-      { initial: valueA, default: valueB }
-    );
+    const initialActual = fileParser({ default: valueB }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      externalCfg: { initial: valueA, default: valueB },
+    });
     expect(initialActual.getValue(initialActual.html(null, null, true))).toBe(
       valueA
     );
 
-    const collDefaultActual = fileParser({ default: valueB }).methods(
-      vi.fn(),
-      vi.fn(),
-      { initial: null, default: valueA }
-    );
+    const collDefaultActual = fileParser({ default: valueB }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      externalCfg: { initial: null, default: valueA },
+    });
     expect(
       collDefaultActual.getValue(collDefaultActual.html(null, null, true))
     ).toBe(valueA);
 
-    const defaultActual = fileParser({ default: valueA }).methods(
-      vi.fn(),
-      vi.fn()
-    );
+    const defaultActual = fileParser({ default: valueA }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     expect(defaultActual.getValue(defaultActual.html(null, null, false))).toBe(
       valueA
     );
 
-    const actual = fileParser({}).methods(vi.fn(), vi.fn());
+    const actual = fileParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     expect(actual.getValue(actual.html(null, null, true))).toBe("");
   });
 
   it("serialise returns null if value matches default", () => {
-    const parser = fileParser({ default: valueA }).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = fileParser({ default: valueA }).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     expect(parser.serialise(true)).toBeNull();
   });
 
   it("serialise returns the current value when it differs from default", () => {
-    const parser = fileParser({}).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = fileParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     parser.html(null, valueA, false);
 
@@ -79,10 +89,11 @@ describe("fileParser", () => {
   });
 
   it("updateValue sets the value", () => {
-    const parser = fileParser({}).methods(
-      vi.fn(),
-      vi.fn(() => valueA)
-    );
+    const parser = fileParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(() => valueA),
+    });
 
     const el = parser.html(null, valueB, true);
     parser.updateValue(el, true);
@@ -91,7 +102,11 @@ describe("fileParser", () => {
 
   it("html sets up onchange handler", async () => {
     const onChange = vi.fn();
-    const parser = fileParser({}).methods(onChange, vi.fn());
+    const parser = fileParser({}).methods({
+      id: null,
+      onChange,
+      getValue: vi.fn(),
+    });
 
     const el =
       parser.html(null, null, true).querySelector("input") ??
@@ -108,7 +123,11 @@ describe("fileParser", () => {
 
   it("onchange handler does nothing when no file is selected", async () => {
     const onChange = vi.fn();
-    const parser = fileParser({}).methods(onChange, vi.fn());
+    const parser = fileParser({}).methods({
+      id: null,
+      onChange,
+      getValue: vi.fn(),
+    });
 
     const el =
       parser.html(null, null, true).querySelector("input") ??
@@ -120,7 +139,11 @@ describe("fileParser", () => {
   });
 
   it("clicking the button clicks the hidden file input", () => {
-    const parser = fileParser({}).methods(vi.fn(), vi.fn());
+    const parser = fileParser({}).methods({
+      id: null,
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+    });
     const el = parser.html(null, null, false);
 
     const input =

@@ -28,7 +28,7 @@ const hashString = (str: string): number => {
   return hash;
 };
 
-export const queryKey = (
+export const hashKey = (
   key: string,
   hashLength: number | null
 ): string | Base64 =>

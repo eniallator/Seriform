@@ -3,6 +3,7 @@ import type {
   AnyParserValue,
   InitParser,
   InitParserObject,
+  MethodsContext,
   Parser,
   ResolvedParserObject,
   SiblingContext,
@@ -16,12 +17,7 @@ export const valueParser = <
   T extends AnyParserValue,
   Cfg extends AnyParserRecord = AnyParserRecord,
 >(
-  init: (
-    onChange: (value: T) => void,
-    getValue: () => T,
-    externalCfg?: { initial: T | null; default: T },
-    siblings?: SiblingContext<Cfg>
-  ) => Required<Parser<T>>,
+  init: (ctx: MethodsContext<T, SiblingContext<Cfg>>) => Required<Parser<T>>,
   label?: string,
   title?: string
 ): InitParser<Required<Parser<T>>, Cfg> => ({
@@ -37,7 +33,7 @@ export const contentParser = (
 ): InitParser<Parser> => ({
   label,
   title,
-  methods: onChange => ({
+  methods: ({ onChange }) => ({
     getValue: () => null as never,
     html: id =>
       initHtml(id, () => {

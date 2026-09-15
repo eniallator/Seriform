@@ -2,30 +2,47 @@ import { isOneOf } from "deep-guards";
 import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
+import { hashKey } from "../../helpers.ts";
 import type { ValueConfig } from "../config.ts";
 
+export interface SelectConfig<
+  A extends readonly [string, ...string[]],
+> extends ValueConfig<A[number]> {
+  options: A;
+  hashLength?: number;
+}
+
 export const selectParser = <const A extends readonly [string, ...string[]]>(
-  cfg: ValueConfig<A[number]> & { options: A }
+  cfg: SelectConfig<A>
 ) => {
   const isOption = isOneOf(...cfg.options);
   const defaultValue = cfg.default ?? cfg.options[0];
+  const hashLength = cfg.hashLength ?? 2;
 
   return valueParser<A[number]>(
-    (onChange, getValue, externalCfg) => ({
-      serialise: () =>
+    ({ onChange, getValue, externalCfg }) => ({
+      serialise: shortUrl =>
         getValue() === (externalCfg?.default ?? defaultValue)
           ? null
-          : getValue(),
+          : shortUrl
+            ? hashKey(getValue(), hashLength)
+            : getValue(),
       getValue: el => (el as HTMLSelectElement).value,
       updateValue: el => {
         (el as HTMLSelectElement).value = getValue();
       },
-      html: (id, query) => {
-        const initial = isOption(query)
-          ? query
-          : isOption(externalCfg?.initial)
+      html: (id, query, shortUrl) => {
+        const matchedOption =
+          shortUrl && query != null
+            ? cfg.options.find(opt => hashKey(opt, hashLength) === query)
+            : undefined;
+
+        const initial =
+          matchedOption ??
+          (!shortUrl && isOption(query) ? query : undefined) ??
+          (isOption(externalCfg?.initial)
             ? externalCfg.initial
-            : (externalCfg?.default ?? defaultValue);
+            : (externalCfg?.default ?? defaultValue));
 
         const attrs = dom.toAttrs({ ...(id != null && { id }), ...cfg.attrs });
 

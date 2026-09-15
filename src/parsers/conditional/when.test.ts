@@ -27,18 +27,18 @@ describe("when", () => {
       parser: textParser({ default: "" }),
     });
 
-  it("renders hidden and reports no value until the condition holds", () => {
+  it("reports itself as hidden and reports no value until the condition holds", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
-    expect(el.firstElementChild).toHaveProperty("hidden", true);
+    expect(el.classList.contains("hidden")).toBe(true);
     expect(parser.getValue(el)).toBeUndefined();
     expect(parser.serialise(false)).toBeNull();
   });
@@ -46,17 +46,17 @@ describe("when", () => {
   it("shows the child and reports its value once the condition holds", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("pro");
 
-    expect(el.firstElementChild).toHaveProperty("hidden", false);
+    expect(el.classList.contains("hidden")).toBe(false);
     expect(parser.getValue(el)).toBe("");
     expect(onChange).toHaveBeenCalledWith("");
   });
@@ -64,12 +64,12 @@ describe("when", () => {
   it("serialise delegates to the child while visible, and returns null while hidden", () => {
     const siblings = makeSiblings();
     let currentValue = "";
-    const parser = buildParser().methods(
-      vi.fn(),
-      () => currentValue,
-      undefined,
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: () => currentValue,
+      siblings: siblings.context,
+    });
     parser.html("conditional", null, false);
 
     expect(parser.serialise(false)).toBeNull();
@@ -84,19 +84,19 @@ describe("when", () => {
   it("hides the child and reports no value once the condition stops holding", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("pro");
     onChange.mockClear();
     siblings.trigger("free");
 
-    expect(el.firstElementChild).toHaveProperty("hidden", true);
+    expect(el.classList.contains("hidden")).toBe(true);
     expect(parser.getValue(el)).toBeUndefined();
     expect(onChange).toHaveBeenCalledWith(undefined);
   });
@@ -104,12 +104,12 @@ describe("when", () => {
   it("does nothing when notified with a value that doesn't change visibility", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      vi.fn(),
-      undefined,
-      siblings.context
-    );
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     parser.html("conditional", null, false);
 
     siblings.trigger("free");
@@ -120,12 +120,12 @@ describe("when", () => {
   it("forwards the child's onChange while visible, but suppresses it while hidden", () => {
     const siblings = makeSiblings();
     const onChange = vi.fn();
-    const parser = buildParser().methods(
+    const parser = buildParser().methods({
+      id: "conditional",
       onChange,
-      () => "",
-      undefined,
-      siblings.context
-    );
+      getValue: () => "",
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
     const input = el.querySelector("input") as HTMLInputElement;
 
@@ -144,12 +144,12 @@ describe("when", () => {
   it("updateValue delegates to the underlying child regardless of visibility", () => {
     const siblings = makeSiblings();
     let currentValue = "Alice";
-    const parser = buildParser().methods(
-      vi.fn(),
-      () => currentValue,
-      undefined,
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: () => currentValue,
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     currentValue = "Bob";
@@ -160,12 +160,13 @@ describe("when", () => {
 
   it("forwards externalCfg's initial value to the child", () => {
     const siblings = makeSiblings();
-    const parser = buildParser().methods(
-      vi.fn(),
-      vi.fn(),
-      { initial: "Alice", default: "" },
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      externalCfg: { initial: "Alice", default: "" },
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
     siblings.trigger("pro");
 
@@ -174,12 +175,13 @@ describe("when", () => {
 
   it("falls back to externalCfg's default when initial is null", () => {
     const siblings = makeSiblings();
-    const parser = buildParser().methods(
-      vi.fn(),
-      vi.fn(),
-      { initial: null, default: "Fallback" },
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      externalCfg: { initial: null, default: "Fallback" },
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
     siblings.trigger("pro");
 
@@ -190,12 +192,12 @@ describe("when", () => {
 
   it("survives being hidden and reshown without losing in-progress input", () => {
     const siblings = makeSiblings();
-    const parser = buildParser().methods(
-      vi.fn(),
-      () => "",
-      undefined,
-      siblings.context
-    );
+    const parser = buildParser().methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: () => "",
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
     siblings.trigger("pro");
 
@@ -216,7 +218,12 @@ describe("when", () => {
       parser: textParser({ default: "" }),
       title: "A hint",
       attrs: { "data-hello": "world!" },
-    }).methods(vi.fn(), vi.fn(), undefined, siblings.context);
+    }).methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     expect(el.id).toBe("conditional");
@@ -231,12 +238,17 @@ describe("unless", () => {
     const parser = unless({
       condition: equals("plan", "pro"),
       parser: textParser({ default: "" }),
-    }).methods(vi.fn(), vi.fn(), undefined, siblings.context);
+    }).methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("free");
 
-    expect(el.firstElementChild).toHaveProperty("hidden", false);
+    expect(el.classList.contains("hidden")).toBe(false);
   });
 
   it("hides the child when the condition holds", () => {
@@ -244,11 +256,16 @@ describe("unless", () => {
     const parser = unless({
       condition: equals("plan", "pro"),
       parser: textParser({ default: "" }),
-    }).methods(vi.fn(), vi.fn(), undefined, siblings.context);
+    }).methods({
+      id: "conditional",
+      onChange: vi.fn(),
+      getValue: vi.fn(),
+      siblings: siblings.context,
+    });
     const el = parser.html("conditional", null, false);
 
     siblings.trigger("pro");
 
-    expect(el.firstElementChild).toHaveProperty("hidden", true);
+    expect(el.classList.contains("hidden")).toBe(true);
   });
 });
