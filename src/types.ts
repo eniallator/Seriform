@@ -67,11 +67,5 @@ export type InitParserObject<
   Cfg extends AnyParserRecord = Partial<O>,
 > = { [K in keyof O]: InitParser<Parser<O[K]>, NoInfer<Cfg>> };
 
-/**
- * The type `createParsers` returns: shaped exactly like `InitParserObject<O, Partial<O>>`, but
- * given its own mapped-type body (rather than just aliasing `InitParserObject<O>`) so it keeps its
- * own name - with a single generic parameter and no `Cfg` - when consumers extract `O` back out
- * (`typeof config extends ResolvedParserObject<infer O> ? O : never`) or hover over `config`.
- */
 export type ResolvedParserObject<O extends AnyParserRecord = AnyParserRecord> =
   { [K in keyof O]: InitParser<Parser<O[K]>, NoInfer<Partial<O>>> };

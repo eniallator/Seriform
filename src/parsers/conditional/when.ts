@@ -21,7 +21,7 @@ export const when = <
 >(
   cfg: WhenConfig<Id, T, V>
 ) =>
-  valueParser<V | undefined, Record<Id, T>>(
+  valueParser<V | undefined, { [K in Id]: T }>(
     ({ id, onChange, getValue, externalCfg, siblings }) => {
       let visible = false;
       let childEl = null as unknown as HTMLElement;

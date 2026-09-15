@@ -6,6 +6,8 @@ The motivation behind this was to create a light-weight, non-framework dependant
 This library uses Parsers as it's building blocks, which are entirely self-contained building blocks which define things like serialisation/deserialisation/HTML Elements/interactivity.\
 The library has some standard parsers available, however since they are self-contained, it is easy to make custom parsers.
 
+**[Live demo](https://eniallator.github.io/Seriform/)** — every parser type wired up in one config.
+
 ## Quick Example
 
 ```typescript
@@ -41,10 +43,12 @@ seriform.addListener(values => {
 - **`createParsers<O>`**: Group parsers into a typed configuration object.
 - **`valueParser<T>`**: Create a value parser (text, number, range, etc.).
 - **`contentParser`**: Create non-editable content parsers (buttons, etc.).
-- **Collection Parsers**: Are just value parsers, however they work on arrays of values, not just a single value.
+- **Collection Parsers** (`tableParser`, `listParser`): Are just value parsers, however they work on arrays of values, not just a single value.
   - **Dynamic rows:** Add and remove rows at runtime (when `expandable: true`, the UI shows `Add Row` and `Delete Selected` controls).
   - **Serialization:** Encodes the collections as CSV-like queries with escaping for commas and backslashes.
   - **State sync:** Items are kept in sync with internal state; adding/removing rows updates listeners.
+- **`groupParser`**: Nests a set of child parsers under a single id, serialising them together as one object value. See [Available Collection Parsers](#available-collection-parsers).
+- **Conditional Parsers** (`when`, `unless`, `ifParser`): Show/hide or switch between parsers based on a sibling field's value. See [Conditional Parsers](#conditional-parsers).
 
 ### Available Value Parsers
 
@@ -67,6 +71,31 @@ All parsers accept common options: `label`, `title`, `default`, and `attrs` for 
 
 - **`tableParser`**: Uses a `table` element, where it has a `fields` attribute which is a tuple of parsers, one for each column of the table.
 - **`listParser`**: Uses a `ul` element, where it has a `field` attribute which is the parser to use for each list item.
+- **`groupParser`**: Nests a set of `children` parsers (built with `createParsers`-style config) under a single id, serialising them together as one value.
+
+### Conditional Parsers
+
+Conditional parsers show/hide (or switch between) other parsers based on the current value of a sibling field, referenced by id. They subscribe to sibling changes and only serialise/contribute a value while active.
+
+- **`when`**: Renders `parser` only while `condition` is satisfied; otherwise its value is `undefined` and it serialises to nothing.
+- **`unless`**: The inverse of `when` — renders `parser` only while `condition` is _not_ satisfied.
+- **`ifParser`**: Given an ordered list of `branches` (each an `{ condition, parser }` pair), renders the first branch whose condition matches, falling back to `otherwise`.
+
+Conditions are built with the helpers in the library:
+
+- **`equals(id, value)`**: True when the sibling field `id` currently equals `value`.
+- **`satisfies(id, test)`**: True when `test(value)` returns true for the sibling field `id`. Has a `.negate()` method used internally by `unless`.
+
+```typescript
+const config = createParsers({
+  "show-details": checkboxParser({ label: "Show details", default: false }),
+  details: when({
+    condition: equals("show-details", true),
+    parser: textParser({ label: "Details", default: "" }),
+    label: "Details",
+  }),
+});
+```
 
 ## Type safety
 
@@ -102,11 +131,14 @@ seriform.getValue("bar"); // Is type string
 
 There are some helpers for these: `valueParser<T>(...)` for parsers with a real, non-nullable value (`T extends NonNullable<unknown>`), and `contentParser(...)` for read-only content, whose value type is always `never`.
 
+`valueParser`'s init function receives a single context object: `{ id, onChange, getValue, externalCfg, siblings }`.\
+`siblings` (present when this parser lives inside a `createParsers` config) exposes `getValue(id)`/`subscribe(id, cb)` for reading or reacting to other fields — this is what powers the [conditional parsers](#conditional-parsers).
+
 Example — simple custom value parser (text input with uppercase normalization):
 
 ```typescript
 const uppercaseTextParser = valueParser<string>(
-  (onChange, getValue, initial) => ({
+  ({ onChange, getValue, externalCfg }) => ({
     html: (id, query) => {
       const input = document.createElement("input");
       if (id != null) {
@@ -116,7 +148,7 @@ const uppercaseTextParser = valueParser<string>(
       input.value =
         query != null
           ? decodeURIComponent(query)
-          : (initial?.initial ?? initial?.default ?? "");
+          : (externalCfg?.initial ?? externalCfg?.default ?? "");
       input.addEventListener("input", () => {
         onChange((input.value || "").toUpperCase());
       });

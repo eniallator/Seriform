@@ -109,7 +109,8 @@ The project is organized into logical modules:
 
 - **`src/parsers/content`** - Content parsers that come out-of-the-box
 - **`src/parsers/value`** - Value parsers that come out-of-the-box
-- **`src/parsers/collection`** - Collection parsers that come out-of-the-box
+- **`src/parsers/nested`** - Collection/group parsers (table, list, group) that come out-of-the-box
+- **`src/parsers/conditional`** - Conditional parsers (`when`, `unless`, `ifParser`) and their condition helpers
 - **`src/seriForm.ts`** - The main SeriForm handling class
 - **`src/create.ts`** - Typed creation helpers
 - **`src/helpers.ts`** - Internal helper methods
