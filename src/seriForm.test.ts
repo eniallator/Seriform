@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { contentParser, createParsers, valueParser } from "./create.ts";
 import { hashKey } from "./helpers.ts";
+import { equals } from "./parsers/conditional/condition.ts";
+import { when } from "./parsers/conditional/when.ts";
+import { selectParser, textParser } from "./parsers/value/index.ts";
 import { SeriForm } from "./seriForm.ts";
 import type { AnySiblingContext, InitParserObject } from "./types.ts";
 
@@ -273,5 +276,30 @@ describe("SeriForm", () => {
 
   it("serialiseToUrlParams handles no extra", () => {
     expect(seriform.serialiseToUrlParams()).toBe("foo=serialised");
+  });
+});
+
+describe("SeriForm + conditional parsers", () => {
+  it("getValue reports undefined for a `when` field once its condition stops being met", () => {
+    const config = createParsers({
+      plan: selectParser({ default: "free", options: ["free", "pro"] }),
+      detail: when({
+        condition: equals("plan", "pro"),
+        parser: textParser({ default: "" }),
+      }),
+    });
+    const baseEl = document.createElement("div");
+    const form = new SeriForm(config, baseEl, { query: "" });
+
+    expect(form.getValue("detail")).toBeUndefined();
+
+    const select = baseEl.querySelector("select") as HTMLSelectElement;
+    select.value = "pro";
+    select.onchange?.({} as Event);
+    expect(form.getValue("detail")).toBe("");
+
+    select.value = "free";
+    select.onchange?.({} as Event);
+    expect(form.getValue("detail")).toBeUndefined();
   });
 });

@@ -60,7 +60,10 @@ export class SeriForm<const R extends AnyParserRecord> {
       const parser = methods({
         id: id,
         onChange: value => {
-          if (value != null) this.state[id].value = value;
+          // `null` (not `undefined`) is a content parser's "just triggered, no real value"
+          // ping; `undefined` is a real value for parsers like `when`, meaning "condition not
+          // met, no value" - it must overwrite the previous value, not be ignored like `null`.
+          if (value !== null) this.state[id].value = value;
           this.registry.notify(id, this.state[id].value);
         },
         getValue: () => this.state[id].value,
