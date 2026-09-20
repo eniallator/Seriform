@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { hashKey } from "../../helpers.ts";
+import { equals } from "../conditional/condition.ts";
+import { ifParser } from "../conditional/if.ts";
+import { when } from "../conditional/when.ts";
 import { buttonParser } from "../content/button.ts";
-import { checkboxParser, textParser } from "../value/index.ts";
+import { checkboxParser, selectParser, textParser } from "../value/index.ts";
 import { encodeArray, encodeRecord } from "./encoding.ts";
 import { groupParser } from "./group.ts";
 
@@ -265,5 +268,81 @@ describe("groupParser", () => {
 
     expect(el.getAttribute("title")).toBe("A hint");
     expect(el.dataset.hello).toBe("world!");
+  });
+
+  describe("nested conditional parsers (siblings wiring)", () => {
+    it.fails(
+      "a nested `when` becomes visible once its sibling condition is met",
+      () => {
+        let value: { plan: "free" | "pro"; detail: string | undefined } = {
+          plan: "free",
+          detail: undefined,
+        };
+        const parser = groupParser({
+          children: {
+            plan: selectParser({ default: "free", options: ["free", "pro"] }),
+            detail: when({
+              condition: equals("plan", "pro"),
+              parser: textParser({ default: "" }),
+            }),
+          },
+        }).methods({
+          id: null,
+          onChange: v => {
+            value = v;
+          },
+          getValue: () => value,
+        });
+        const el = parser.html("group", null, false);
+
+        const detailWrapper = el.querySelectorAll(".config-item")[1]
+          ?.lastElementChild as HTMLElement;
+        expect(detailWrapper.classList.contains("hidden")).toBe(true);
+
+        const select = el.querySelector("select") as HTMLSelectElement;
+        select.value = "pro";
+        select.onchange?.({} as Event);
+
+        expect(detailWrapper.classList.contains("hidden")).toBe(false);
+        expect(value.detail).toBe("");
+      }
+    );
+
+    it.fails(
+      "a nested `ifParser` switches branches once its sibling condition is met",
+      () => {
+        const parser = groupParser({
+          children: {
+            plan: selectParser({ default: "free", options: ["free", "pro"] }),
+            detail: ifParser({
+              branches: [
+                {
+                  condition: equals("plan", "pro"),
+                  parser: textParser({ default: "Pro details" }),
+                },
+              ],
+              otherwise: textParser({ default: "fallback" }),
+            }),
+          },
+        }).methods({
+          id: null,
+          onChange: vi.fn(),
+          getValue: vi.fn((): { plan: "free" | "pro"; detail: string } => ({
+            plan: "free",
+            detail: "fallback",
+          })),
+        });
+        const el = parser.html("group", null, false);
+
+        const select = el.querySelector("select") as HTMLSelectElement;
+        select.value = "pro";
+        select.onchange?.({} as Event);
+
+        const detailInput = el
+          .querySelectorAll(".config-item")[1]
+          ?.querySelector("input") as HTMLInputElement;
+        expect(detailInput.value).toBe("Pro details");
+      }
+    );
   });
 });
