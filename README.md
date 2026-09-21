@@ -83,10 +83,13 @@ A path is a tuple of keys locating a field relative to where the conditional par
 - **`unless`**: The inverse of `when` — renders `parser` only while `condition` is _not_ satisfied.
 - **`ifParser`**: Given an ordered list of `branches` (each an `{ condition, parser }` pair), renders the first branch whose condition matches, falling back to `otherwise`.
 
-`when`/`unless` take a single-path `condition`, built with:
+`when`/`unless`/`ifParser` all take their `condition` as a `Derived<boolean, Deps>` — a boolean computed from one or more dependencies together. A few ways to build one:
 
 - **`equals(path, value)`**: True when the field at `path` currently equals `value`.
-- **`satisfies(path, test)`**: True when `test(value)` returns true for the field at `path`. Has a `.negate()` method used internally by `unless`.
+- **`satisfies(path, test)`**: True when `test(value)` returns true for the field at `path`.
+- **`derived(fn, deps)`**: True when `fn` returns true, given every dependency's resolved value — for a condition spanning more than one field, built from paths via `dependency<T>()(...path)`.
+
+`unless` is just `when` with its `condition` run through **`negate(condition)`**, which inverts a `Derived<boolean, Deps>` without touching its dependencies.
 
 ```typescript
 const config = createParsers({
@@ -99,7 +102,7 @@ const config = createParsers({
 });
 ```
 
-`ifParser`'s branches can each depend on more than one field at once, so their `condition` is built with `derived` instead — a function of every dependency's resolved value, plus the paths themselves (built with `dependency<T>()(...path)`):
+`when`/`unless`/`ifParser` branches can each depend on more than one field at once via `derived`:
 
 ```typescript
 const config = createParsers({

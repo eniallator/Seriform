@@ -5,7 +5,7 @@ import {
 } from "niall-utils/encoding";
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../create.ts";
+import { valueParser } from "../../parser.ts";
 import type { ValueConfig } from "../config.ts";
 
 export const colorParser = (cfg: ValueConfig<string>) => {

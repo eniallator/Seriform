@@ -1,12 +1,12 @@
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../create.ts";
 import {
   getPath,
   subscribePath,
   type AnyDependencies,
-  type Derived,
-} from "../../dependencies.ts";
+} from "../../dependency.ts";
+import type { Derived } from "../../derived.ts";
+import { valueParser } from "../../parser.ts";
 import type { AnyParserValue, InitParser, Parser } from "../../types.ts";
 import type { Config } from "../config.ts";
 

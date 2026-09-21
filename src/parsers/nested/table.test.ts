@@ -1,8 +1,8 @@
 import { tuple } from "niall-utils/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { encodeArray } from "../../encoding.ts";
 import { checkboxParser, numberParser, textParser } from "../value/index.ts";
-import { encodeArray } from "./encoding.ts";
 import { tableParser } from "./table.ts";
 
 describe("tableParser", () => {

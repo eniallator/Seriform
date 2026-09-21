@@ -1,19 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createParsers } from "../../create.ts";
+import { equals, satisfies } from "../../derived.ts";
 import { FieldRegistry } from "../../fieldRegistry.ts";
+import { createParsers } from "../../parser.ts";
 import type { AnySiblingContext } from "../../types.ts";
 import { groupParser } from "../nested/group.ts";
 import { listParser } from "../nested/list.ts";
 import { tableParser } from "../nested/table.ts";
 import { checkboxParser, numberParser, textParser } from "../value/index.ts";
-import { equals, satisfies } from "./condition.ts";
 import { unless, when } from "./when.ts";
 
 const makeSiblings = () => {
   const subscribers = new Map<string, (value: unknown) => void>();
+  let currentPlan: unknown;
   const context: AnySiblingContext = {
-    get: vi.fn(),
+    get: vi.fn((path: readonly PropertyKey[]) =>
+      JSON.stringify(path) === JSON.stringify(["plan"])
+        ? currentPlan
+        : undefined
+    ),
     getAbsolute: vi.fn(),
     subscribe: vi.fn(
       (path: readonly PropertyKey[], cb: (value: unknown) => void) => {
@@ -25,8 +30,10 @@ const makeSiblings = () => {
   };
   return {
     context,
-    trigger: (value: string) =>
-      subscribers.get(JSON.stringify(["plan"]))?.(value),
+    trigger: (value: string) => {
+      currentPlan = value;
+      subscribers.get(JSON.stringify(["plan"]))?.(value);
+    },
   };
 };
 

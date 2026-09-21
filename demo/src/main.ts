@@ -6,8 +6,6 @@ import {
   colorParser,
   createParsers,
   datetimeParser,
-  dependency,
-  derived,
   equals,
   fileParser,
   groupParser,
@@ -153,17 +151,11 @@ const config = createParsers({
     title: "First matching branch wins",
     branches: [
       {
-        condition: derived(
-          visibility => visibility === "internal",
-          [dependency<"private" | "internal" | "public">()("visibility")]
-        ),
+        condition: equals(["visibility"], "internal"),
         parser: textParser({ default: "Visible to the team only." }),
       },
       {
-        condition: derived(
-          isPublic => isPublic,
-          [dependency<boolean>()("is-public")]
-        ),
+        condition: equals(["is-public"], true),
         parser: textParser({ default: "Announced to everyone." }),
       },
     ],
@@ -226,16 +218,11 @@ const mount = (shortUrl: boolean): void => {
   const previousValues = seriform?.getAllValues() ?? null;
 
   configEl.innerHTML = "";
+  const query = previousValues == null ? location.search : "";
   const form = new SeriForm(
     config,
     configEl,
-    shortUrl
-      ? {
-          query: previousValues == null ? location.search : "",
-          shortUrl: true,
-          hashLength: 2,
-        }
-      : { query: previousValues == null ? location.search : "" }
+    shortUrl ? { query, shortUrl: true, hashLength: 2 } : { query }
   );
   seriform = form;
 

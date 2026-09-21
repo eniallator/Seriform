@@ -1,10 +1,4 @@
-import type {
-  AnyDependencies,
-  Dependency,
-  DependencyValues,
-  Derived,
-  Path,
-} from "./dependencies.ts";
+import type { AnyDependencies } from "./dependency.ts";
 import type {
   AnyParserValue,
   FieldsValue,
@@ -32,16 +26,6 @@ export const valueParser = <
   title?: string,
   deps?: Deps
 ): InitParser<Required<Parser<T>>, Deps> => ({ label, title, methods, deps });
-
-export const dependency =
-  <T>() =>
-  <const P extends Path>(...path: P): Dependency<T, P> =>
-    ({ path }) as Dependency<T, P>;
-
-export const derived = <T, const Deps extends AnyDependencies>(
-  derive: (...values: DependencyValues<Deps>) => T,
-  deps: Deps
-): Derived<T, Deps> => ({ deps, derive });
 
 export const contentParser = (
   initHtml: (id: string | null, onChange: () => void) => HTMLElement,

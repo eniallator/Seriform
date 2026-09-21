@@ -1,6 +1,6 @@
 import type { Base64 } from "niall-utils/encoding";
 
-import type { AnyDependencies, Path, ValidateScope } from "./dependencies.ts";
+import type { AnyDependencies, Path, ValidateScope } from "./dependency.ts";
 
 export type AnyParserValue = NonNullable<unknown> | undefined;
 export type AnyParserRecord = Record<string, AnyParserValue>;

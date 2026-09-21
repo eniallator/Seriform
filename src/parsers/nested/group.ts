@@ -3,14 +3,20 @@ import { tuple } from "niall-utils/core";
 import { typedFromEntries, typedKeys, typedToEntries } from "niall-utils/data";
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../create.ts";
 import {
   resolveDependency,
   type AnyDependencies,
   type ValidateScope,
-} from "../../dependencies.ts";
+} from "../../dependency.ts";
+import {
+  decodeArray,
+  decodeRecord,
+  encodeArray,
+  encodeRecord,
+} from "../../encoding.ts";
 import { FieldRegistry } from "../../fieldRegistry.ts";
 import { configItem, hashKey } from "../../helpers.ts";
+import { valueParser } from "../../parser.ts";
 import type {
   AnyParserValue,
   FieldsValue,
@@ -20,12 +26,6 @@ import type {
   ScopedFields,
 } from "../../types.ts";
 import type { Config } from "../config.ts";
-import {
-  decodeArray,
-  decodeRecord,
-  encodeArray,
-  encodeRecord,
-} from "./encoding.ts";
 
 const childElement = (wrapperEl: Element, i: number): HTMLElement =>
   wrapperEl.children[i]?.lastElementChild as HTMLElement;

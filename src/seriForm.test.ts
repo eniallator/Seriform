@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { contentParser, createParsers, valueParser } from "./create.ts";
+import { equals } from "./derived.ts";
 import { hashKey } from "./helpers.ts";
-import { equals } from "./parsers/conditional/condition.ts";
+import { contentParser, createParsers, valueParser } from "./parser.ts";
 import { when } from "./parsers/conditional/when.ts";
 import { selectParser, textParser } from "./parsers/value/index.ts";
 import { SeriForm } from "./seriForm.ts";

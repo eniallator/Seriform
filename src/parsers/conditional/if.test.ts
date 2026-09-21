@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { dependency, derived } from "../../create.ts";
-import type { Path } from "../../dependencies.ts";
+import { dependency, type Path } from "../../dependency.ts";
+import { derived } from "../../derived.ts";
 import type { AnyParserValue, AnySiblingContext } from "../../types.ts";
 import { numberParser, textParser } from "../value/index.ts";
 import { ifParser } from "./if.ts";

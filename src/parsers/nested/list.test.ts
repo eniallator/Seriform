@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { encodeArray } from "../../encoding.ts";
 import { checkboxParser, textParser } from "../value/index.ts";
-import { encodeArray } from "./encoding.ts";
 import { listParser } from "./list.ts";
 
 describe("listParser", () => {

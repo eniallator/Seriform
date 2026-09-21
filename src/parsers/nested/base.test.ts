@@ -1,12 +1,12 @@
 import { raise } from "niall-utils/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { encodeArray } from "../../encoding.ts";
 import {
   collectionParser,
   type CollectionAdapter,
   type CollectionConfig,
 } from "./base.ts";
-import { encodeArray } from "./encoding.ts";
 
 /**
  * The row "handle" mirrors what a real Parser exposes: `el` to read the rendered DOM value from (used

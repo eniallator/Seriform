@@ -5,7 +5,7 @@ import {
   resolveDependency,
   resolvePath,
   subscribePath,
-} from "./dependencies.ts";
+} from "./dependency.ts";
 import type { AnySiblingContext } from "./types.ts";
 
 describe("resolvePath", () => {

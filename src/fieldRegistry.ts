@@ -1,6 +1,6 @@
 import { raise } from "niall-utils/core";
 
-import { PATH_PARENT, type Path } from "./dependencies.ts";
+import { PATH_PARENT, type Path } from "./dependency.ts";
 import type { AnySiblingContext } from "./types.ts";
 
 const drill = (value: unknown, path: Path): unknown =>

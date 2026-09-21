@@ -2,9 +2,9 @@ import { isExact, isNumber, isString, isUnionOf } from "deep-guards";
 import { mapFilter } from "niall-utils/functional";
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../create.ts";
+import { decodeArray, encodeArray } from "../../encoding.ts";
+import { valueParser } from "../../parser.ts";
 import type { Config } from "../config.ts";
-import { decodeArray, encodeArray } from "./encoding.ts";
 
 export interface NewRowParams<Item> {
   queryItems?: (string | null)[];

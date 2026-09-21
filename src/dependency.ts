@@ -26,28 +26,16 @@ export interface Dependency<T, P extends Path = Path> {
 export type AnyDependency = Dependency<unknown>;
 export type AnyDependencies = readonly AnyDependency[];
 
+export const dependency =
+  <T>() =>
+  <const P extends Path>(...path: P): Dependency<T, P> =>
+    ({ path }) as Dependency<T, P>;
+
 /** Maps a tuple of `Dependency<T, P>` to the tuple of their `T`s, e.g. for spreading resolved
  * values positionally into a multi-dependency compute function. */
 export type DependencyValues<Deps extends AnyDependencies> = {
   [K in keyof Deps]: Deps[K] extends Dependency<infer T> ? T : never;
 };
-
-/**
- * A value of type `T` computed from multiple dependencies together (unlike a plain `Dependency`,
- * which just names one path + its expected type). `derive`'s stored type is deliberately widened
- * to `(...values: any[]) => T` rather than the precise `(...values: DependencyValues<Deps>) => T`
- * - `derived` (`create.ts`) is what actually type-checks the callback an author writes. A
- * generic-defaulted *function* field using `Deps` directly here makes TS elaborate every element
- * against the default (`AnyDependencies`) whenever a `Derived<...>` sits inside an array-typed
- * generic constraint (e.g. `ifParser`'s branches), silently rejecting perfectly valid narrower
- * instances - confirmed in isolation; `unknown[]` doesn't rescue this either (contravariance
- * still bites, one level in, inside `derived`'s own cast) - only `any[]` sidesteps variance
- * checking entirely.
- */
-export interface Derived<T, Deps extends AnyDependencies = AnyDependencies> {
-  deps: Deps;
-  derive: (...values: any[]) => T;
-}
 
 /** Cancels every adjacent `[key, ".."]` pair, left to right - a leftover leading `".."` means the
  * path reaches further up than this reduction alone can tell. `PrevItem` holds the one real key

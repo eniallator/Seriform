@@ -6,7 +6,7 @@ import {
 import { formatLocaleDate } from "niall-utils/format";
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../create.ts";
+import { valueParser } from "../../parser.ts";
 import type { ValueConfig } from "../config.ts";
 
 export const datetimeParser = (cfg: ValueConfig<Date>) => {

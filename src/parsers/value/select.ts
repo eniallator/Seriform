@@ -1,8 +1,8 @@
 import { isOneOf } from "deep-guards";
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../create.ts";
 import { hashKey } from "../../helpers.ts";
+import { valueParser } from "../../parser.ts";
 import type { ValueConfig } from "../config.ts";
 
 export interface SelectConfig<
