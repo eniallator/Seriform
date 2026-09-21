@@ -1,10 +1,8 @@
 {
   "exclude": ["dist", "**/*.test.ts"],
   "extends": "./tsconfig.common.json",
-  "include": ["src"],
+  "include": ["src", "demo/src"],
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "outDir": "dist",
-    "rootDir": "src"
+    "lib": ["dom", "dom.iterable", "esnext"]
   }
 }

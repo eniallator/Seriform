@@ -42,7 +42,7 @@ seriform.addListener(values => {
 - **`SeriForm`**: Manages state, DOM, listeners, and URL sync.
 - **`createParsers<O>`**: Group parsers into a typed configuration object.
 - **`valueParser<T>`**: Create a value parser (text, number, range, etc.).
-- **`contentParser`**: Create non-editable content parsers (buttons, etc.).
+- **`contentParser`**: Create non-editable content elements (buttons, etc.) that hold no value.
 - **Collection Parsers** (`tableParser`, `listParser`): Are just value parsers, however they work on arrays of values, not just a single value.
   - **Dynamic rows:** Add and remove rows at runtime (when `expandable: true`, the UI shows `Add Row` and `Delete Selected` controls).
   - **Serialization:** Encodes the collections as CSV-like queries with escaping for commas and backslashes.
@@ -63,9 +63,17 @@ seriform.addListener(values => {
 
 All parsers accept common options: `label`, `title`, `default`, and `attrs` for HTML attributes.
 
-### Available Content Parsers
+### Available Content Elements
 
-- **`buttonParser`**: Button elements that trigger actions without modifying state.
+Content elements hold no value of their own (`getValue` is always `null`) — they're for static or interactive
+markup that doesn't participate in the form's data.
+
+- **`buttonContent`**: Button elements that trigger actions without modifying state.
+- **`paragraphContent`**: A `<p>` of static text.
+- **`headingContent`**: An `<h1>`-`<h6>` (`level`, default `2`).
+- **`dividerContent`**: An `<hr>`.
+- **`imageContent`**: An `<img>` (`src`/`alt` go through `attrs`).
+- **`rawHtmlContent`**: A wrapper `<div>` with arbitrary `html`.
 
 ### Available Collection Parsers
 

@@ -1,4 +1,5 @@
 export * from "./seriForm.ts";
+export * from "./content/index.ts";
 export * from "./dependency.ts";
 export * from "./derived.ts";
 export * from "./fieldRegistry.ts";

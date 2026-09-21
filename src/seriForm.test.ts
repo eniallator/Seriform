@@ -2,11 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { equals } from "./derived.ts";
 import { hashKey } from "./helpers.ts";
-import { contentParser, createParsers, valueParser } from "./parser.ts";
+import {
+  contentParser,
+  createParsers,
+  valueParser,
+  type InitParserObject,
+} from "./parser.ts";
 import { when } from "./parsers/conditional/when.ts";
 import { selectParser, textParser } from "./parsers/value/index.ts";
 import { SeriForm } from "./seriForm.ts";
-import type { AnySiblingContext, InitParserObject } from "./types.ts";
+import type { AnySiblingContext } from "./types.ts";
 
 interface CapturedFooFns {
   onChange?: (value: string) => void;
@@ -31,10 +36,8 @@ const makeParsers = (captured: CapturedFooFns) =>
       "Foo",
       "Foo Title"
     ),
-    bar: contentParser(
-      () => document.createElement("button"),
-      "Bar",
-      "Bar Title"
+    bar: contentParser({ label: "Bar", title: "Bar Title" }, () =>
+      document.createElement("button")
     ),
   });
 
@@ -224,10 +227,8 @@ describe("SeriForm", () => {
 
     const contentOnlySeriform = new SeriForm(
       createParsers({
-        bar: contentParser(
-          () => document.createElement("button"),
-          "Bar",
-          "Bar Title"
+        bar: contentParser({ label: "Bar", title: "Bar Title" }, () =>
+          document.createElement("button")
         ),
       }),
       baseEl,

@@ -2,7 +2,7 @@ import { tuple } from "niall-utils/core";
 import { zip } from "niall-utils/data";
 import { dom } from "niall-utils/ui";
 
-import type { InitParser, Parser } from "../../types.ts";
+import type { InitParser, Parser } from "../../parser.ts";
 import {
   collectionParser,
   type CollectionConfig,

@@ -16,23 +16,23 @@ import {
 } from "../../encoding.ts";
 import { FieldRegistry } from "../../fieldRegistry.ts";
 import { configItem, hashKey } from "../../helpers.ts";
-import { valueParser } from "../../parser.ts";
-import type {
-  AnyParserValue,
-  FieldsValue,
-  InitParser,
-  InitParserObject,
-  Parser,
-  ScopedFields,
-} from "../../types.ts";
-import type { Config } from "../config.ts";
+import {
+  valueParser,
+  type BaseConfig,
+  type FieldsValue,
+  type InitParser,
+  type InitParserObject,
+  type Parser,
+  type ScopedFields,
+} from "../../parser.ts";
+import type { AnyParserValue } from "../../types.ts";
 
 const childElement = (wrapperEl: Element, i: number): HTMLElement =>
   wrapperEl.children[i]?.lastElementChild as HTMLElement;
 
 export interface GroupConfig<
   Fields extends InitParserObject = InitParserObject,
-> extends Config {
+> extends BaseConfig {
   children: Fields;
   hashLength?: number;
 }

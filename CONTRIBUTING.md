@@ -107,7 +107,7 @@ pnpm findissues
 
 The project is organized into logical modules:
 
-- **`src/parsers/content`** - Content parsers that come out-of-the-box
+- **`src/content`** - Content elements that come out-of-the-box (no value of their own, e.g. `buttonContent`, `headingContent`)
 - **`src/parsers/value`** - Value parsers that come out-of-the-box
 - **`src/parsers/nested`** - Collection/group parsers (table, list, group) that come out-of-the-box
 - **`src/parsers/conditional`** - Conditional parsers (`when`, `unless`, `ifParser`)
@@ -142,27 +142,30 @@ Example test structure:
 ```typescript
 import { describe, expect, it, vi } from "vitest";
 
-import { buttonParser } from "./button";
+import { buttonContent } from "./button.ts";
 
-describe("buttonParser", () => {
+describe("buttonContent", () => {
   it("creates a button with correct text and attributes", () => {
-    const parser = buttonParser({
+    const parser = buttonContent({
       text: "Click me",
-      attrs: { class: "my-btn", "data-hello": "world!" },
+      attrs: { "data-hello": "world!" },
     });
-    const el = parser.methods(vi.fn(), vi.fn()).html("btn-id");
+    const el = parser
+      .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
+      .html("btn-id", null, false);
 
     expect(el.tagName).toBe("BUTTON");
     expect(el.textContent).toBe("Click me");
-    expect(el.getAttribute("class")).toBe("primary wrap-text my-btn");
     expect(el.getAttribute("id")).toBe("btn-id");
     expect(el.dataset.hello).toBe("world!");
   });
 
   it("calls onChange when clicked", () => {
-    const parser = buttonParser({});
+    const parser = buttonContent({});
     const onChange = vi.fn();
-    const el = parser.methods(onChange, vi.fn()).html("id");
+    const el = parser
+      .methods({ id: null, onChange, getValue: vi.fn() })
+      .html("id", null, false);
 
     el.click();
 
@@ -170,12 +173,13 @@ describe("buttonParser", () => {
   });
 
   it("should have defaults with an empty object", () => {
-    const parser = buttonParser({});
-    const el = parser.methods(vi.fn(), vi.fn()).html(null);
+    const parser = buttonContent({});
+    const el = parser
+      .methods({ id: null, onChange: vi.fn(), getValue: vi.fn() })
+      .html(null, null, false);
 
     expect(el.tagName).toBe("BUTTON");
     expect(el.textContent).toBe("");
-    expect(el.getAttribute("class")).toBe("primary wrap-text");
     expect(el.hasAttribute("id")).toBe(false);
   });
 });

@@ -2,8 +2,7 @@ import { isOneOf } from "deep-guards";
 import { dom } from "niall-utils/ui";
 
 import { hashKey } from "../../helpers.ts";
-import { valueParser } from "../../parser.ts";
-import type { ValueConfig } from "../config.ts";
+import { valueParser, type ValueConfig } from "../../parser.ts";
 
 export interface SelectConfig<
   A extends readonly [string, ...string[]],

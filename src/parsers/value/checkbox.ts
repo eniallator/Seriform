@@ -1,8 +1,7 @@
 import { isOneOf } from "deep-guards";
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../parser.ts";
-import type { ValueConfig } from "../config.ts";
+import { valueParser, type ValueConfig } from "../../parser.ts";
 
 export const checkboxParser = (cfg: ValueConfig<boolean>) => {
   const defaultValue = cfg.default ?? false;

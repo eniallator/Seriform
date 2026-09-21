@@ -26,7 +26,7 @@ export interface Derived<T, Deps extends AnyDependencies = AnyDependencies> {
 
 export const derived = <T, const Deps extends AnyDependencies>(
   derive: (...values: DependencyValues<Deps>) => T,
-  deps: Deps
+  ...deps: Deps
 ): Derived<T, Deps> => ({ deps, derive });
 
 /** A boolean `Derived` from a single dependency, tested against a predicate - the building block
@@ -36,7 +36,7 @@ export const satisfies = <T extends AnyParserValue, const P extends Path>(
   path: P,
   test: (value: T) => boolean
 ): Derived<boolean, readonly [Dependency<T, P>]> =>
-  derived(test, [dependency<T>()(...path)]);
+  derived(test, dependency<T>()(...path));
 
 export const equals = <T extends AnyParserValue, const P extends Path>(
   path: P,
@@ -49,4 +49,4 @@ export const equals = <T extends AnyParserValue, const P extends Path>(
 export const negate = <Deps extends AnyDependencies>(
   condition: Derived<boolean, Deps>
 ): Derived<boolean, Deps> =>
-  derived((...values) => !condition.derive(...values), condition.deps);
+  derived((...values) => !condition.derive(...values), ...condition.deps);

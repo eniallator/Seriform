@@ -1,10 +1,7 @@
 import type { UnionToTuple } from "niall-utils";
 
-import type {
-  AnyParserRecord,
-  AnySiblingContext,
-  InitParserObject,
-} from "./types.ts";
+import type { InitParserObject } from "./parser.ts";
+import type { AnyParserRecord, AnySiblingContext } from "./types.ts";
 
 export namespace PathFlags {
   export type Parent = "..";

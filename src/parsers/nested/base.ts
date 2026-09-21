@@ -3,8 +3,7 @@ import { mapFilter } from "niall-utils/functional";
 import { dom } from "niall-utils/ui";
 
 import { decodeArray, encodeArray } from "../../encoding.ts";
-import { valueParser } from "../../parser.ts";
-import type { Config } from "../config.ts";
+import { valueParser, type BaseConfig } from "../../parser.ts";
 
 export interface NewRowParams<Item> {
   queryItems?: (string | null)[];
@@ -19,7 +18,7 @@ export type NewRow<Item, Row> = (
   params: NewRowParams<Item>
 ) => readonly [Element, Row];
 
-export interface CollectionConfig<Item> extends Config {
+export interface CollectionConfig<Item> extends BaseConfig {
   expandable?: boolean;
   initialCollapsed?: boolean;
   default: Item[];

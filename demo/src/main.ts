@@ -1,18 +1,25 @@
 import { typedToEntries } from "niall-utils/data";
 
 import {
-  buttonParser,
+  buttonContent,
   checkboxParser,
   colorParser,
   createParsers,
   datetimeParser,
+  dependency,
+  derived,
+  dividerContent,
   equals,
   fileParser,
   groupParser,
+  headingContent,
   ifParser,
+  imageContent,
   listParser,
   numberParser,
+  paragraphContent,
   rangeParser,
+  rawHtmlContent,
   satisfies,
   selectParser,
   SeriForm,
@@ -23,7 +30,11 @@ import {
   type ResolvedParserObject,
 } from "../../src/index.ts";
 
+const LOGO_PLACEHOLDER_SRC =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='14' fill='%236366f1'/%3E%3C/svg%3E";
+
 const config = createParsers({
+  "project-heading": headingContent({ text: "Project details", level: 3 }),
   "project-name": textParser({
     label: "Project name",
     default: "Aurora",
@@ -34,6 +45,12 @@ const config = createParsers({
     default: "A shareable config editor built with Seriform.",
     area: true,
     attrs: { placeholder: "One or two sentences…" },
+  }),
+
+  "visibility-divider": dividerContent({}),
+  "visibility-heading": headingContent({
+    text: "Visibility & scheduling",
+    level: 3,
   }),
   visibility: selectParser({
     label: "Visibility",
@@ -49,9 +66,65 @@ const config = createParsers({
     title: "Skip the internal review stage",
     default: false,
   }),
+  "live-preview": paragraphContent({
+    title:
+      "A derived text - recomputed live from project-name/visibility/is-public, no `when`/`ifParser` needed since it's always shown",
+    text: derived(
+      (name, visibility, isPublic) =>
+        `"${name}" will launch as ${visibility}${
+          isPublic ? ", going live immediately" : ""
+        }.`,
+      dependency<string>()("project-name"),
+      dependency<string>()("visibility"),
+      dependency<boolean>()("is-public")
+    ),
+  }),
+  announcement: when({
+    condition: equals(["visibility"], "public"),
+    label: "Announcement text",
+    title: "Shown only while visibility is 'public'",
+    parser: paragraphContent({ text: "We're live! Come take a look." }),
+  }),
+  "status-message": ifParser({
+    label: "Status message",
+    title: "First matching branch wins",
+    branches: [
+      {
+        condition: equals(["visibility"], "internal"),
+        parser: paragraphContent({ text: "Visible to the team only." }),
+      },
+      {
+        condition: equals(["is-public"], true),
+        parser: paragraphContent({ text: "Announced to everyone." }),
+      },
+    ],
+    otherwise: paragraphContent({ text: "Draft — not yet shared." }),
+  }),
+
+  "branding-divider": dividerContent({}),
+  "branding-heading": headingContent({ text: "Branding", level: 3 }),
   "accent-color": colorParser({
     label: "Accent color",
     default: "6366f1",
+  }),
+  logo: fileParser({
+    text: "Upload logo",
+    attrs: { accept: "image/*" },
+  }),
+  "logo-preview": imageContent({
+    title: "A static placeholder — swap for real branding",
+    attrs: {
+      src: LOGO_PLACEHOLDER_SRC,
+      alt: "Placeholder logo mark",
+      width: 64,
+      height: 64,
+    },
+  }),
+
+  "actions-divider": dividerContent({}),
+  "actions-heading": headingContent({
+    text: "Capacity & actions",
+    level: 3,
   }),
   capacity: rangeParser({
     label: "Capacity",
@@ -63,14 +136,18 @@ const config = createParsers({
     default: 3,
     attrs: { min: "0", max: "10" },
   }),
-  logo: fileParser({
-    text: "Upload logo",
-    attrs: { accept: "image/*" },
-  }),
-  notify: buttonParser({
-    text: "Send test notification",
+  notify: buttonContent({
+    title:
+      "Button text is also a derived value - it stays in sync with capacity",
+    text: derived(
+      capacity => `Send test notification to up to ${capacity} people`,
+      dependency<number>()("capacity")
+    ),
     attrs: { class: "primary wrap-text" },
   }),
+
+  "team-divider": dividerContent({}),
+  "team-heading": headingContent({ text: "Ownership & team", level: 3 }),
   owner: groupParser({
     label: "Owner",
     title: "Who's responsible for this launch",
@@ -83,8 +160,8 @@ const config = createParsers({
         label: "Public launch note",
         title:
           "Shown only while the root-level visibility field is 'public' — reaches out of this group via '..'",
-        parser: textParser({
-          default: "Owner is on call for the first hour after launch.",
+        parser: paragraphContent({
+          text: "Owner is on call for the first hour after launch.",
         }),
       }),
     },
@@ -114,8 +191,11 @@ const config = createParsers({
     label: "Team lead inactive",
     title:
       "Depends on team[0]'s Active column — a fixed-width column inside a table row is always a definite type, even though the row array itself is dynamic",
-    parser: textParser({
-      default: "⚠️ The first team member is marked inactive.",
+    parser: paragraphContent({
+      text: derived(
+        name => `⚠️ ${name ?? "The first team member"} is marked inactive.`,
+        dependency<string | undefined>()("team", 0, 0)
+      ),
     }),
   }),
   tags: listParser({
@@ -129,16 +209,7 @@ const config = createParsers({
     label: "Third tag",
     title:
       "Depends on tags[2] — a list's items are a dynamic array, so this dependency's type must be widened to `string | undefined` to account for there being fewer than 3 tags",
-    parser: textParser({ default: "Consider trimming down to 2 tags." }),
-  }),
-  announcement: when({
-    condition: equals(["visibility"], "public"),
-    label: "Announcement text",
-    title: "Shown only while visibility is 'public'",
-    parser: textParser({
-      default: "We're live! Come take a look.",
-      area: true,
-    }),
+    parser: paragraphContent({ text: "Consider trimming down to 2 tags." }),
   }),
   "invite-limit": unless({
     condition: equals(["is-public"], true),
@@ -146,20 +217,13 @@ const config = createParsers({
     title: "Hidden once the project is public",
     parser: numberParser({ default: 25, attrs: { min: "0", max: "1000" } }),
   }),
-  "status-message": ifParser({
-    label: "Status message",
-    title: "First matching branch wins",
-    branches: [
-      {
-        condition: equals(["visibility"], "internal"),
-        parser: textParser({ default: "Visible to the team only." }),
-      },
-      {
-        condition: equals(["is-public"], true),
-        parser: textParser({ default: "Announced to everyone." }),
-      },
-    ],
-    otherwise: textParser({ default: "Draft — not yet shared." }),
+
+  "help-divider": dividerContent({}),
+  "help-note": rawHtmlContent({
+    html:
+      "<p>Want to see more field types in action? Check the " +
+      '<a href="https://github.com/eniallator/Seriform#available-value-parsers" target="_blank" rel="noreferrer">full parser reference</a>' +
+      " in the README.</p>",
   }),
 });
 

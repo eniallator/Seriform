@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { buttonContent } from "../../content/button.ts";
 import { dependency } from "../../dependency.ts";
 import { derived, equals } from "../../derived.ts";
 import { encodeArray, encodeRecord } from "../../encoding.ts";
@@ -7,7 +8,6 @@ import { FieldRegistry } from "../../fieldRegistry.ts";
 import { hashKey } from "../../helpers.ts";
 import { ifParser } from "../conditional/if.ts";
 import { when } from "../conditional/when.ts";
-import { buttonParser } from "../content/button.ts";
 import { checkboxParser, selectParser, textParser } from "../value/index.ts";
 import { groupParser } from "./group.ts";
 
@@ -191,7 +191,7 @@ describe("groupParser", () => {
   it("excludes content-only children from serialise, DOM value, and record decoding", () => {
     const withButton = {
       name: textParser({ default: "" }),
-      action: buttonParser({ text: "Go" }),
+      action: buttonContent({ text: "Go" }),
     };
 
     const domParser = groupParser({ children: withButton }).methods({
@@ -315,8 +315,8 @@ describe("groupParser", () => {
             branches: [
               {
                 condition: derived(
-                  (plan: "free" | "pro") => plan === "pro",
-                  [dependency<"free" | "pro">()("plan")]
+                  plan => plan === "pro",
+                  dependency<"free" | "pro">()("plan")
                 ),
                 parser: textParser({ default: "Pro details" }),
               },

@@ -1,7 +1,6 @@
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../parser.ts";
-import type { ValueConfig } from "../config.ts";
+import { valueParser, type ValueConfig } from "../../parser.ts";
 import { defaultNumber, numToStr } from "./number.ts";
 
 export const rangeParser = (cfg: ValueConfig<number>) => {

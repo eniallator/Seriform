@@ -6,9 +6,13 @@ import {
   type AnyDependencies,
 } from "../../dependency.ts";
 import type { Derived } from "../../derived.ts";
-import { valueParser } from "../../parser.ts";
-import type { AnyParserValue, InitParser, Parser } from "../../types.ts";
-import type { Config } from "../config.ts";
+import {
+  valueParser,
+  type BaseConfig,
+  type InitParser,
+  type Parser,
+} from "../../parser.ts";
+import type { AnyParserValue } from "../../types.ts";
 
 export interface IfBranch<
   Deps extends AnyDependencies = AnyDependencies,
@@ -26,7 +30,7 @@ export interface IfConfig<
   Otherwise extends AnyParserValue,
   OtherwiseDeps extends AnyDependencies | undefined =
     AnyDependencies | undefined,
-> extends Config {
+> extends BaseConfig {
   branches: Branches;
   otherwise: InitParser<Parser<Otherwise>, OtherwiseDeps>;
 }

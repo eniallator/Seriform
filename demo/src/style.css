@@ -202,6 +202,36 @@ a {
   overflow-wrap: anywhere;
 }
 
+/* ---- content elements: heading/paragraph/divider/image/rawHtml ---- */
+
+.config-item h3,
+.config-item h4 {
+  margin: 24px 0 0;
+}
+
+#config-ui > .config-item:first-child h3,
+#config-ui > .config-item:first-child h4 {
+  margin-top: 0;
+}
+
+.config-item p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.config-item hr {
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 4px 0;
+}
+
+.config-item img {
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
 /* ---- form controls ---- */
 
 input,

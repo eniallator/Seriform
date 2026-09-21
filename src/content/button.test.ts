@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { buttonParser } from "./button.ts";
+import { buttonContent } from "./button.ts";
 
-describe("buttonParser", () => {
+describe("buttonContent", () => {
   it("creates a button with correct text and attributes", () => {
-    const parser = buttonParser({
+    const parser = buttonContent({
       text: "Click me",
       title: "A helpful hint",
       attrs: { "data-hello": "world!" },
@@ -25,7 +25,7 @@ describe("buttonParser", () => {
   });
 
   it("calls onChange when clicked", () => {
-    const parser = buttonParser({});
+    const parser = buttonContent({});
     const onChange = vi.fn();
     const el = parser
       .methods({
@@ -41,7 +41,7 @@ describe("buttonParser", () => {
   });
 
   it("should have defaults with an empty object", () => {
-    const parser = buttonParser({});
+    const parser = buttonContent({});
     const el = parser
       .methods({
         id: null,

@@ -41,7 +41,7 @@ const makeSiblings = () => {
 const branchEquals = <T extends AnyParserValue, const Id extends string>(
   id: Id,
   value: T
-) => derived((current: T) => current === value, [dependency<T>()(id)]);
+) => derived(current => current === value, dependency<T>()(id));
 
 describe("ifParser", () => {
   const buildParser = () =>

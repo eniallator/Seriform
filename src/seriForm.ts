@@ -6,12 +6,8 @@ import { dom } from "niall-utils/ui";
 
 import { FieldRegistry } from "./fieldRegistry.ts";
 import { configItem, hashKey, parseQuery } from "./helpers.ts";
-import type {
-  AnyParserRecord,
-  AnyParserValue,
-  InitParserObject,
-  Parser,
-} from "./types.ts";
+import type { InitParserObject, Parser } from "./parser.ts";
+import type { AnyParserRecord, AnyParserValue } from "./types.ts";
 
 interface StateItem<T extends AnyParserValue> {
   parser: Parser<T>;

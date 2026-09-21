@@ -6,15 +6,19 @@ import {
   type AnyDependencies,
 } from "../../dependency.ts";
 import { negate, type Derived } from "../../derived.ts";
-import { valueParser } from "../../parser.ts";
-import type { AnyParserValue, InitParser, Parser } from "../../types.ts";
-import type { Config } from "../config.ts";
+import {
+  valueParser,
+  type BaseConfig,
+  type InitParser,
+  type Parser,
+} from "../../parser.ts";
+import type { AnyParserValue } from "../../types.ts";
 
 export interface WhenConfig<
   Deps extends AnyDependencies,
   V extends AnyParserValue,
   ChildDeps extends AnyDependencies | undefined = AnyDependencies | undefined,
-> extends Config {
+> extends BaseConfig {
   condition: Derived<boolean, Deps>;
   parser: InitParser<Parser<V>, ChildDeps>;
 }
