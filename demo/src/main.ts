@@ -6,6 +6,8 @@ import {
   colorParser,
   createParsers,
   datetimeParser,
+  dependency,
+  derived,
   equals,
   fileParser,
   groupParser,
@@ -13,6 +15,7 @@ import {
   listParser,
   numberParser,
   rangeParser,
+  satisfies,
   selectParser,
   SeriForm,
   tableParser,
@@ -77,6 +80,15 @@ const config = createParsers({
       name: textParser({ label: "Name", default: "" }),
       email: textParser({ label: "Email", default: "" }),
       "is-admin": checkboxParser({ label: "Admin access", default: true }),
+      "public-note": when({
+        condition: equals(["..", "visibility"], "public"),
+        label: "Public launch note",
+        title:
+          "Shown only while the root-level visibility field is 'public' — reaches out of this group via '..'",
+        parser: textParser({
+          default: "Owner is on call for the first hour after launch.",
+        }),
+      }),
     },
   }),
   team: tableParser({
@@ -96,14 +108,33 @@ const config = createParsers({
       ["Alan Turing", "Editor", true],
     ],
   }),
+  "team-lead-warning": when({
+    condition: satisfies(
+      ["team", 0, 2],
+      (active: boolean | undefined) => active !== true
+    ),
+    label: "Team lead inactive",
+    title:
+      "Depends on team[0]'s Active column — a fixed-width column inside a table row is always a definite type, even though the row array itself is dynamic",
+    parser: textParser({
+      default: "⚠️ The first team member is marked inactive.",
+    }),
+  }),
   tags: listParser({
     label: "Tags",
     expandable: true,
     field: textParser({ default: "" }),
     default: ["beta", "internal"],
   }),
+  "third-tag-note": when({
+    condition: satisfies(["tags", 2], (tag: string | undefined) => tag != null),
+    label: "Third tag",
+    title:
+      "Depends on tags[2] — a list's items are a dynamic array, so this dependency's type must be widened to `string | undefined` to account for there being fewer than 3 tags",
+    parser: textParser({ default: "Consider trimming down to 2 tags." }),
+  }),
   announcement: when({
-    condition: equals("visibility", "public"),
+    condition: equals(["visibility"], "public"),
     label: "Announcement text",
     title: "Shown only while visibility is 'public'",
     parser: textParser({
@@ -112,7 +143,7 @@ const config = createParsers({
     }),
   }),
   "invite-limit": unless({
-    condition: equals("is-public", true),
+    condition: equals(["is-public"], true),
     label: "Invite limit",
     title: "Hidden once the project is public",
     parser: numberParser({ default: 25, attrs: { min: "0", max: "1000" } }),
@@ -122,11 +153,17 @@ const config = createParsers({
     title: "First matching branch wins",
     branches: [
       {
-        condition: equals("visibility", "internal"),
+        condition: derived(
+          visibility => visibility === "internal",
+          [dependency<"private" | "internal" | "public">()("visibility")]
+        ),
         parser: textParser({ default: "Visible to the team only." }),
       },
       {
-        condition: equals("is-public", true),
+        condition: derived(
+          isPublic => isPublic,
+          [dependency<boolean>()("is-public")]
+        ),
         parser: textParser({ default: "Announced to everyone." }),
       },
     ],

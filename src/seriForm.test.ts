@@ -131,20 +131,20 @@ describe("SeriForm", () => {
   });
 
   // --- sibling context ---
-  it("siblings.getValue reads a sibling's live value", () => {
+  it("siblings.get reads a sibling's live value", () => {
     captured.onChange?.("changed");
-    expect(captured.siblings?.getValue("foo")).toBe("changed");
+    expect(captured.siblings?.get(["foo"])).toBe("changed");
   });
 
-  it("siblings.getValue throws for an unregistered id", () => {
-    expect(() => captured.siblings?.getValue("missing")).toThrow(
+  it("siblings.get throws for an unregistered id", () => {
+    expect(() => captured.siblings?.get(["missing"])).toThrow(
       /No sibling field registered/
     );
   });
 
   it("siblings.subscribe is notified on change, and stops after unsubscribing", () => {
     const cb = vi.fn();
-    const unsubscribe = captured.siblings?.subscribe("foo", cb);
+    const unsubscribe = captured.siblings?.subscribe(["foo"], cb);
 
     captured.onChange?.("changed");
     expect(cb).toHaveBeenCalledWith("changed");
@@ -178,7 +178,7 @@ describe("SeriForm", () => {
           getValue: vi.fn(() => "second-value"),
           updateValue: vi.fn(),
           html: vi.fn(() => {
-            siblingValueDuringConstruction = siblings?.getValue("first");
+            siblingValueDuringConstruction = siblings?.get(["first"]);
             return document.createElement("input");
           }),
         }),
@@ -284,7 +284,7 @@ describe("SeriForm + conditional parsers", () => {
     const config = createParsers({
       plan: selectParser({ default: "free", options: ["free", "pro"] }),
       detail: when({
-        condition: equals("plan", "pro"),
+        condition: equals(["plan"], "pro"),
         parser: textParser({ default: "" }),
       }),
     });

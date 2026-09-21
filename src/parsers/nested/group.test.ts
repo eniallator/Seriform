@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { dependency, derived } from "../../create.ts";
+import { FieldRegistry } from "../../fieldRegistry.ts";
 import { hashKey } from "../../helpers.ts";
 import { equals } from "../conditional/condition.ts";
 import { ifParser } from "../conditional/if.ts";
@@ -271,78 +273,150 @@ describe("groupParser", () => {
   });
 
   describe("nested conditional parsers (siblings wiring)", () => {
-    it.fails(
-      "a nested `when` becomes visible once its sibling condition is met",
-      () => {
-        let value: { plan: "free" | "pro"; detail: string | undefined } = {
+    it("a nested `when` becomes visible once its sibling condition is met", () => {
+      let value: { plan: "free" | "pro"; detail: string | undefined } = {
+        plan: "free",
+        detail: undefined,
+      };
+      const parser = groupParser({
+        children: {
+          plan: selectParser({ default: "free", options: ["free", "pro"] }),
+          detail: when({
+            condition: equals(["plan"], "pro"),
+            parser: textParser({ default: "" }),
+          }),
+        },
+      }).methods({
+        id: null,
+        onChange: v => {
+          value = v;
+        },
+        getValue: () => value,
+      });
+      const el = parser.html("group", null, false);
+
+      const detailWrapper = el.querySelectorAll(".config-item")[1]
+        ?.lastElementChild as HTMLElement;
+      expect(detailWrapper.classList.contains("hidden")).toBe(true);
+
+      const select = el.querySelector("select") as HTMLSelectElement;
+      select.value = "pro";
+      select.onchange?.({} as Event);
+
+      expect(detailWrapper.classList.contains("hidden")).toBe(false);
+      expect(value.detail).toBe("");
+    });
+
+    it("a nested `ifParser` switches branches once its sibling condition is met", () => {
+      const parser = groupParser({
+        children: {
+          plan: selectParser({ default: "free", options: ["free", "pro"] }),
+          detail: ifParser({
+            branches: [
+              {
+                condition: derived(
+                  (plan: "free" | "pro") => plan === "pro",
+                  [dependency<"free" | "pro">()("plan")]
+                ),
+                parser: textParser({ default: "Pro details" }),
+              },
+            ],
+            otherwise: textParser({ default: "fallback" }),
+          }),
+        },
+      }).methods({
+        id: null,
+        onChange: vi.fn(),
+        getValue: vi.fn((): { plan: "free" | "pro"; detail: string } => ({
           plan: "free",
-          detail: undefined,
-        };
-        const parser = groupParser({
-          children: {
-            plan: selectParser({ default: "free", options: ["free", "pro"] }),
-            detail: when({
-              condition: equals("plan", "pro"),
-              parser: textParser({ default: "" }),
-            }),
-          },
-        }).methods({
-          id: null,
-          onChange: v => {
-            value = v;
-          },
-          getValue: () => value,
-        });
-        const el = parser.html("group", null, false);
+          detail: "fallback",
+        })),
+      });
+      const el = parser.html("group", null, false);
 
-        const detailWrapper = el.querySelectorAll(".config-item")[1]
-          ?.lastElementChild as HTMLElement;
-        expect(detailWrapper.classList.contains("hidden")).toBe(true);
+      const select = el.querySelector("select") as HTMLSelectElement;
+      select.value = "pro";
+      select.onchange?.({} as Event);
 
-        const select = el.querySelector("select") as HTMLSelectElement;
-        select.value = "pro";
-        select.onchange?.({} as Event);
+      const detailInput = el
+        .querySelectorAll(".config-item")[1]
+        ?.querySelector("input") as HTMLInputElement;
+      expect(detailInput.value).toBe("Pro details");
+    });
 
-        expect(detailWrapper.classList.contains("hidden")).toBe(false);
-        expect(value.detail).toBe("");
-      }
-    );
+    it("a nested group's child reaches one level up via '..' to a root sibling", () => {
+      let plan: "free" | "pro" = "free";
+      const rootRegistry = new FieldRegistry();
+      rootRegistry.register("plan", () => plan);
 
-    it.fails(
-      "a nested `ifParser` switches branches once its sibling condition is met",
-      () => {
-        const parser = groupParser({
-          children: {
-            plan: selectParser({ default: "free", options: ["free", "pro"] }),
-            detail: ifParser({
-              branches: [
-                {
-                  condition: equals("plan", "pro"),
-                  parser: textParser({ default: "Pro details" }),
-                },
-              ],
-              otherwise: textParser({ default: "fallback" }),
-            }),
-          },
-        }).methods({
-          id: null,
-          onChange: vi.fn(),
-          getValue: vi.fn((): { plan: "free" | "pro"; detail: string } => ({
-            plan: "free",
-            detail: "fallback",
-          })),
-        });
-        const el = parser.html("group", null, false);
+      const parser = groupParser({
+        children: {
+          detail: when({
+            condition: equals(["..", "plan"], "pro"),
+            parser: textParser({ default: "" }),
+          }),
+        },
+      }).methods({
+        id: null,
+        onChange: vi.fn(),
+        getValue: vi.fn(() => ({ detail: undefined })),
+        siblings: rootRegistry.context(),
+      });
+      const el = parser.html("group", null, false);
 
-        const select = el.querySelector("select") as HTMLSelectElement;
-        select.value = "pro";
-        select.onchange?.({} as Event);
+      const detailWrapper = el.querySelectorAll(".config-item")[0]
+        ?.lastElementChild as HTMLElement;
+      expect(detailWrapper.classList.contains("hidden")).toBe(true);
 
-        const detailInput = el
-          .querySelectorAll(".config-item")[1]
-          ?.querySelector("input") as HTMLInputElement;
-        expect(detailInput.value).toBe("Pro details");
-      }
-    );
+      plan = "pro";
+      rootRegistry.notify("plan", plan);
+
+      expect(detailWrapper.classList.contains("hidden")).toBe(false);
+    });
+
+    it("a doubly-nested group's child reaches the true root via two '..' hops and via '~'", () => {
+      let plan: "free" | "pro" = "free";
+      const rootRegistry = new FieldRegistry();
+      rootRegistry.register("plan", () => plan);
+
+      const parser = groupParser({
+        children: {
+          inner: groupParser({
+            children: {
+              relative: when({
+                condition: equals(["..", "..", "plan"], "pro"),
+                parser: textParser({ default: "" }),
+              }),
+              absolute: when({
+                condition: equals(["~", "plan"], "pro"),
+                parser: textParser({ default: "" }),
+              }),
+            },
+          }),
+        },
+      }).methods({
+        id: null,
+        onChange: vi.fn(),
+        getValue: vi.fn(() => ({
+          inner: { relative: undefined, absolute: undefined },
+        })),
+        siblings: rootRegistry.context(),
+      });
+      const el = parser.html("group", null, false);
+
+      const innerEl = el.querySelectorAll(".config-item")[0]
+        ?.lastElementChild as HTMLElement;
+      const [relativeWrapper, absoluteWrapper] = [
+        ...innerEl.querySelectorAll(".config-item"),
+      ].map(item => item.lastElementChild as HTMLElement);
+      expect(relativeWrapper?.classList.contains("hidden")).toBe(true);
+      expect(absoluteWrapper?.classList.contains("hidden")).toBe(true);
+
+      plan = "pro";
+      rootRegistry.notify("plan", plan);
+
+      expect(relativeWrapper?.classList.contains("hidden")).toBe(false);
+      expect(absoluteWrapper?.classList.contains("hidden")).toBe(false);
+    });
   });
 });

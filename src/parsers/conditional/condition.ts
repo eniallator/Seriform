@@ -1,21 +1,22 @@
-import type { AnyParserRecord, AnyParserValue } from "../../types.ts";
+import type { Dependency, Path } from "../../dependencies.ts";
+import type { AnyParserValue } from "../../types.ts";
 
-export interface Condition<Cfg extends AnyParserRecord> {
-  id: keyof Cfg;
-  test: (value: Cfg[keyof Cfg]) => boolean;
-  negate: () => Condition<Cfg>;
+export interface Condition<T, P extends Path = Path> extends Dependency<T, P> {
+  test: (value: T) => boolean;
+  negate: () => Condition<T, P>;
 }
 
-export const satisfies = <const Id extends string, T extends AnyParserValue>(
-  id: Id,
+export const satisfies = <T extends AnyParserValue, const P extends Path>(
+  path: P,
   test: (value: T) => boolean
-): Condition<Record<Id, T>> => ({
-  id,
-  test,
-  negate: () => satisfies(id, value => !test(value)),
-});
+): Condition<T, P> =>
+  ({
+    path,
+    test,
+    negate: () => satisfies(path, (value: T) => !test(value)),
+  }) as Condition<T, P>;
 
-export const equals = <const Id extends string, const T extends AnyParserValue>(
-  id: Id,
+export const equals = <T extends AnyParserValue, const P extends Path>(
+  path: P,
   value: T
-): Condition<Record<Id, T>> => satisfies(id, current => current === value);
+): Condition<T, P> => satisfies(path, current => current === value);

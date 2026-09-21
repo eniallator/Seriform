@@ -75,24 +75,47 @@ All parsers accept common options: `label`, `title`, `default`, and `attrs` for 
 
 ### Conditional Parsers
 
-Conditional parsers show/hide (or switch between) other parsers based on the current value of a sibling field, referenced by id. They subscribe to sibling changes and only serialise/contribute a value while active.
+Conditional parsers show/hide (or switch between) other parsers based on the current value of one or more sibling fields, referenced by path. They subscribe to sibling changes and only serialise/contribute a value while active.
+
+A path is a tuple of keys locating a field relative to where the conditional parser itself sits: `["plan"]` is a direct sibling, `["..", "profile", "plan"]` walks up one enclosing `groupParser` scope and back down into `profile`, and `["~", "plan"]` is always resolved from the true root regardless of nesting depth. Every path is validated at compile time against the actual config shape it's placed into — a typo'd key or a walk past the root is a type error, not a runtime surprise.
 
 - **`when`**: Renders `parser` only while `condition` is satisfied; otherwise its value is `undefined` and it serialises to nothing.
 - **`unless`**: The inverse of `when` — renders `parser` only while `condition` is _not_ satisfied.
 - **`ifParser`**: Given an ordered list of `branches` (each an `{ condition, parser }` pair), renders the first branch whose condition matches, falling back to `otherwise`.
 
-Conditions are built with the helpers in the library:
+`when`/`unless` take a single-path `condition`, built with:
 
-- **`equals(id, value)`**: True when the sibling field `id` currently equals `value`.
-- **`satisfies(id, test)`**: True when `test(value)` returns true for the sibling field `id`. Has a `.negate()` method used internally by `unless`.
+- **`equals(path, value)`**: True when the field at `path` currently equals `value`.
+- **`satisfies(path, test)`**: True when `test(value)` returns true for the field at `path`. Has a `.negate()` method used internally by `unless`.
 
 ```typescript
 const config = createParsers({
   "show-details": checkboxParser({ label: "Show details", default: false }),
   details: when({
-    condition: equals("show-details", true),
+    condition: equals(["show-details"], true),
     parser: textParser({ label: "Details", default: "" }),
     label: "Details",
+  }),
+});
+```
+
+`ifParser`'s branches can each depend on more than one field at once, so their `condition` is built with `derived` instead — a function of every dependency's resolved value, plus the paths themselves (built with `dependency<T>()(...path)`):
+
+```typescript
+const config = createParsers({
+  plan: selectParser({ default: "free", options: ["free", "pro", "team"] }),
+  seats: numberParser({ default: 1 }),
+  access: ifParser({
+    branches: [
+      {
+        condition: derived(
+          (plan, seats) => plan === "team" && seats > 5,
+          [dependency<string>()("plan"), dependency<number>()("seats")]
+        ),
+        parser: textParser({ label: "Enterprise access", default: "" }),
+      },
+    ],
+    otherwise: textParser({ label: "Standard access", default: "" }),
   }),
 });
 ```
@@ -132,7 +155,7 @@ seriform.getValue("bar"); // Is type string
 There are some helpers for these: `valueParser<T>(...)` for parsers with a real, non-nullable value (`T extends NonNullable<unknown>`), and `contentParser(...)` for read-only content, whose value type is always `never`.
 
 `valueParser`'s init function receives a single context object: `{ id, onChange, getValue, externalCfg, siblings }`.\
-`siblings` (present when this parser lives inside a `createParsers` config) exposes `getValue(id)`/`subscribe(id, cb)` for reading or reacting to other fields — this is what powers the [conditional parsers](#conditional-parsers).
+`siblings` (present when this parser lives inside a `createParsers` config) exposes `get(path)`/`getAbsolute(path)`/`subscribe(path, cb)`/`subscribeAbsolute(path, cb)` for reading or reacting to other fields by path — this is what powers the [conditional parsers](#conditional-parsers). `getAbsolute`/`subscribeAbsolute` resolve from the true root regardless of nesting; a plain `path`/`subscribe` call resolves relative to this field's own immediate scope, walking up one level per leading `".."` segment.
 
 Example — simple custom value parser (text input with uppercase normalization):
 

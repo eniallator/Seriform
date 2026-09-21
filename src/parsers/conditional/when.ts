@@ -1,27 +1,44 @@
 import { dom } from "niall-utils/ui";
 
-import { valueParser } from "../../create.ts";
+import { dependency, valueParser } from "../../create.ts";
+import {
+  subscribePath,
+  type AnyDependencies,
+  type Dependency,
+  type Path,
+} from "../../dependencies.ts";
 import type { AnyParserValue, InitParser, Parser } from "../../types.ts";
 import type { Config } from "../config.ts";
 import type { Condition } from "./condition.ts";
 
 export interface WhenConfig<
-  Id extends string,
   T extends AnyParserValue,
+  P extends Path,
   V extends AnyParserValue,
+  ChildDeps extends AnyDependencies | undefined = AnyDependencies | undefined,
 > extends Config {
-  condition: Condition<Record<Id, T>>;
-  parser: InitParser<Parser<V>>;
+  condition: Condition<T, P>;
+  parser: InitParser<Parser<V>, ChildDeps>;
 }
 
+type WhenDeps<
+  T,
+  P extends Path,
+  ChildDeps extends AnyDependencies | undefined,
+> = readonly [
+  Dependency<T, P>,
+  ...(ChildDeps extends AnyDependencies ? ChildDeps : readonly []),
+];
+
 export const when = <
-  Id extends string,
   T extends AnyParserValue,
+  P extends Path,
   V extends AnyParserValue,
+  const ChildDeps extends AnyDependencies | undefined = undefined,
 >(
-  cfg: WhenConfig<Id, T, V>
+  cfg: WhenConfig<T, P, V, ChildDeps>
 ) =>
-  valueParser<V | undefined, { [K in Id]: T }>(
+  valueParser<V | undefined, WhenDeps<T, P, ChildDeps>>(
     ({ id, onChange, getValue, externalCfg, siblings }) => {
       let visible = false;
       let childEl = null as unknown as HTMLElement;
@@ -60,27 +77,34 @@ export const when = <
           wrapperEl.appendChild(childEl);
           wrapperEl.classList.toggle("hidden", !visible);
 
-          siblings?.subscribe(cfg.condition.id, value => {
-            const shouldShow = cfg.condition.test(value);
-            if (shouldShow === visible) return;
+          if (siblings != null) {
+            subscribePath(siblings, cfg.condition.path, value => {
+              const shouldShow = cfg.condition.test(value as T);
+              if (shouldShow === visible) return;
 
-            visible = shouldShow;
-            wrapperEl.classList.toggle("hidden", !visible);
-            onChange(visible ? child.getValue(childEl) : undefined);
-          });
+              visible = shouldShow;
+              wrapperEl.classList.toggle("hidden", !visible);
+              onChange(visible ? child.getValue(childEl) : undefined);
+            });
+          }
 
           return wrapperEl;
         },
       };
     },
     cfg.label,
-    cfg.title
+    cfg.title,
+    [
+      dependency<T>()(...cfg.condition.path),
+      ...(cfg.parser.deps ?? []),
+    ] as unknown as WhenDeps<T, P, ChildDeps>
   );
 
 export const unless = <
-  Id extends string,
   T extends AnyParserValue,
+  P extends Path,
   V extends AnyParserValue,
+  const ChildDeps extends AnyDependencies | undefined = undefined,
 >(
-  cfg: WhenConfig<Id, T, V>
+  cfg: WhenConfig<T, P, V, ChildDeps>
 ) => when({ ...cfg, condition: cfg.condition.negate() });

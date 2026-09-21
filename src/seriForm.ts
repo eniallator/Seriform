@@ -79,7 +79,7 @@ export class SeriForm<const R extends AnyParserRecord> {
       this.state[id] = { parser, el, value };
 
       this.registry.register(id, () => this.state[id].value);
-      this.registry.subscribe(id, () => {
+      this.registry.subscribe([id], () => {
         this.tellListeners(id);
       });
     }

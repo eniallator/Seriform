@@ -1,30 +1,47 @@
 import type {
-  AnyParserRecord,
+  AnyDependencies,
+  Dependency,
+  DependencyValues,
+  Derived,
+  Path,
+} from "./dependencies.ts";
+import type {
   AnyParserValue,
+  FieldsValue,
   InitParser,
   InitParserObject,
   MethodsContext,
   Parser,
   ResolvedParserObject,
-  SiblingContext,
+  ScopedFields,
 } from "./types.ts";
 
-export const createParsers = <O extends AnyParserRecord>(
-  parsers: InitParserObject<O, NoInfer<Partial<O>>>
-): ResolvedParserObject<O> => parsers;
+export const createParsers = <
+  const Fields extends InitParserObject<FieldsValue<Fields>>,
+>(
+  parsers: ScopedFields<FieldsValue<Fields>, Fields, true, Fields>
+): ResolvedParserObject<FieldsValue<Fields>> =>
+  parsers as ResolvedParserObject<FieldsValue<Fields>>;
 
 export const valueParser = <
   T extends AnyParserValue,
-  Cfg extends AnyParserRecord = AnyParserRecord,
+  const Deps extends AnyDependencies | undefined = undefined,
 >(
-  init: (ctx: MethodsContext<T, SiblingContext<Cfg>>) => Required<Parser<T>>,
+  methods: (ctx: MethodsContext<T>) => Required<Parser<T>>,
   label?: string,
-  title?: string
-): InitParser<Required<Parser<T>>, Cfg> => ({
-  label,
-  title,
-  methods: init as InitParser<Required<Parser<T>>>["methods"],
-});
+  title?: string,
+  deps?: Deps
+): InitParser<Required<Parser<T>>, Deps> => ({ label, title, methods, deps });
+
+export const dependency =
+  <T>() =>
+  <const P extends Path>(...path: P): Dependency<T, P> =>
+    ({ path }) as Dependency<T, P>;
+
+export const derived = <T, const Deps extends AnyDependencies>(
+  derive: (...values: DependencyValues<Deps>) => T,
+  deps: Deps
+): Derived<T, Deps> => ({ deps, derive });
 
 export const contentParser = (
   initHtml: (id: string | null, onChange: () => void) => HTMLElement,

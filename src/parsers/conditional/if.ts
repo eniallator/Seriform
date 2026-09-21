@@ -1,72 +1,80 @@
 import { dom } from "niall-utils/ui";
 
 import { valueParser } from "../../create.ts";
-import type {
-  AnyParserRecord,
-  AnyParserValue,
-  InitParser,
-  Parser,
-} from "../../types.ts";
+import {
+  getPath,
+  subscribePath,
+  type AnyDependencies,
+  type Derived,
+} from "../../dependencies.ts";
+import type { AnyParserValue, InitParser, Parser } from "../../types.ts";
 import type { Config } from "../config.ts";
-import type { Condition } from "./condition.ts";
 
 export interface IfBranch<
-  Cfg extends AnyParserRecord = AnyParserRecord,
+  Deps extends AnyDependencies = AnyDependencies,
   V extends AnyParserValue = AnyParserValue,
+  ChildDeps extends AnyDependencies | undefined = AnyDependencies | undefined,
 > {
-  condition: Condition<Cfg>;
-  parser: InitParser<Parser<V>>;
+  condition: Derived<boolean, Deps>;
+  parser: InitParser<Parser<V>, ChildDeps>;
 }
 
-export type AnyBranches = readonly [
-  IfBranch<Record<string, any>>,
-  ...IfBranch<Record<string, any>>[],
-];
+export type AnyBranches = readonly [IfBranch, ...IfBranch[]];
 
 export interface IfConfig<
   Branches extends AnyBranches,
   Otherwise extends AnyParserValue,
+  OtherwiseDeps extends AnyDependencies | undefined =
+    AnyDependencies | undefined,
 > extends Config {
   branches: Branches;
-  otherwise: InitParser<Parser<Otherwise>>;
+  otherwise: InitParser<Parser<Otherwise>, OtherwiseDeps>;
 }
 
-type BranchValue<B> = B extends IfBranch<any, infer V> ? V : never;
+type BranchValue<B> = B extends IfBranch<any, infer V, any> ? V : never;
 
-type BranchCfg<B> = B extends IfBranch<infer Cfg, any> ? Cfg : never;
-type BranchesCfg<Branches extends AnyBranches> =
-  BranchCfg<Branches[number]> extends infer Merged extends AnyParserRecord
-    ? {
-        [
-          K in Merged extends unknown ? keyof Merged : never
-        ]: Merged extends Record<K, infer V> ? V : never;
-      }
-    : never;
+/** A single branch's own contribution to `ifParser`'s aggregate deps: its condition's deps,
+ * plus whatever its own child parser (possibly itself a container) still has pending. */
+type BranchDeps<B> =
+  B extends IfBranch<infer Deps, any, infer ChildDeps>
+    ? readonly [
+        ...Deps,
+        ...(ChildDeps extends AnyDependencies ? ChildDeps : readonly []),
+      ]
+    : readonly [];
+
+type AllBranchDeps<Branches extends readonly IfBranch[]> =
+  Branches extends readonly [
+    infer Head extends IfBranch,
+    ...infer Rest extends readonly IfBranch[],
+  ]
+    ? readonly [...BranchDeps<Head>, ...AllBranchDeps<Rest>]
+    : readonly [];
+
+type IfDeps<
+  Branches extends AnyBranches,
+  OtherwiseDeps extends AnyDependencies | undefined,
+> = readonly [
+  ...AllBranchDeps<Branches>,
+  ...(OtherwiseDeps extends AnyDependencies ? OtherwiseDeps : readonly []),
+];
 
 export const ifParser = <
-  Branches extends AnyBranches,
+  const Branches extends AnyBranches,
   Otherwise extends AnyParserValue,
+  const OtherwiseDeps extends AnyDependencies | undefined = undefined,
 >(
-  cfg: IfConfig<Branches, Otherwise>
-): InitParser<
-  Required<Parser<BranchValue<Branches[number]> | Otherwise>>,
-  BranchesCfg<Branches>
-> => {
-  type Id = keyof BranchesCfg<Branches>;
+  cfg: IfConfig<Branches, Otherwise, OtherwiseDeps>
+) => {
   type V = BranchValue<Branches[number]> | Otherwise;
 
-  const branches = cfg.branches.map<{
-    id: Id;
-    test: (value: AnyParserValue) => boolean;
-    parser: InitParser<Parser<AnyParserValue>>;
-  }>(branch => ({
-    id: branch.condition.id,
-    test: branch.condition.test,
+  const branches = cfg.branches.map(branch => ({
+    deps: branch.condition.deps,
+    test: branch.condition.derive,
     parser: branch.parser,
   }));
-  const ids = new Set(cfg.branches.map(branch => branch.condition.id as Id));
 
-  return valueParser<V, BranchesCfg<Branches>>(
+  const parser = valueParser<V, IfDeps<Branches, OtherwiseDeps>>(
     ({ onChange, getValue, externalCfg, siblings }) => {
       let activeIndex: number | null = null;
       let active: { parser: Parser<AnyParserValue>; el: HTMLElement } | null =
@@ -90,8 +98,8 @@ export const ifParser = <
             const index =
               siblings == null
                 ? -1
-                : branches.findIndex(({ id, test }) =>
-                    test(siblings.getValue(id))
+                : branches.findIndex(({ deps, test }) =>
+                    test(...deps.map(dep => getPath(siblings, dep.path)))
                   );
             if (index === activeIndex) return;
             activeIndex = index;
@@ -120,11 +128,20 @@ export const ifParser = <
             onChange(parser.getValue(el) as V);
           };
 
-          ids.forEach(branchId => {
-            siblings?.subscribe(branchId, () => {
-              evaluate();
+          if (siblings != null) {
+            const seen = new Set<string>();
+            branches.forEach(({ deps }) => {
+              deps.forEach(dep => {
+                const key = JSON.stringify(dep.path);
+                if (seen.has(key)) return;
+                seen.add(key);
+
+                subscribePath(siblings, dep.path, () => {
+                  evaluate();
+                });
+              });
             });
-          });
+          }
           evaluate();
 
           return wrapperEl;
@@ -132,6 +149,14 @@ export const ifParser = <
       };
     },
     cfg.label,
-    cfg.title
+    cfg.title,
+    cfg.branches
+      .flatMap(branch => branch.condition.deps.concat(branch.parser.deps ?? []))
+      .concat(cfg.otherwise.deps ?? []) as unknown as IfDeps<
+      Branches,
+      OtherwiseDeps
+    >
   );
+
+  return parser;
 };

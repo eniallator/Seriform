@@ -1,43 +1,58 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { AnySiblingContext } from "../../types.ts";
+import { dependency, derived } from "../../create.ts";
+import type { Path } from "../../dependencies.ts";
+import type { AnyParserValue, AnySiblingContext } from "../../types.ts";
 import { numberParser, textParser } from "../value/index.ts";
-import { equals } from "./condition.ts";
 import { ifParser } from "./if.ts";
 
 const makeSiblings = () => {
   const values = new Map<string, unknown>();
   const subscribers = new Map<string, Set<(value: unknown) => void>>();
+  const keyOf = (path: Path) => JSON.stringify(path);
   const context: AnySiblingContext = {
-    getValue: vi.fn((id: string) => values.get(id)),
-    subscribe: vi.fn((id: string, cb: (value: unknown) => void) => {
-      const cbs = subscribers.get(id) ?? new Set();
+    get: vi.fn((path: Path) => values.get(keyOf(path))),
+    getAbsolute: vi.fn((path: Path) => values.get(keyOf(path))),
+    subscribe: vi.fn((path: Path, cb: (value: unknown) => void) => {
+      const key = keyOf(path);
+      const cbs = subscribers.get(key) ?? new Set();
       cbs.add(cb);
-      subscribers.set(id, cbs);
+      subscribers.set(key, cbs);
       return () => cbs.delete(cb);
     }),
+    subscribeAbsolute: vi.fn(),
   };
   return {
     context,
     trigger: (id: string, value: unknown) => {
-      values.set(id, value);
-      subscribers.get(id)?.forEach(cb => {
+      const key = keyOf([id]);
+      values.set(key, value);
+      subscribers.get(key)?.forEach(cb => {
         cb(value);
       });
     },
   };
 };
 
+// A single-path, equals-style branch condition, matching the shape `equals`/`satisfies` build
+// for `when`/`unless` - `ifParser`'s own branches take a general `Derived<boolean, Deps>` shape
+// (multiple dependencies, computed together), so this is test-local plumbing rather than a
+// library export.
+const branchEquals = <T extends AnyParserValue, const Id extends string>(
+  id: Id,
+  value: T
+) => derived((current: T) => current === value, [dependency<T>()(id)]);
+
 describe("ifParser", () => {
   const buildParser = () =>
     ifParser({
       branches: [
         {
-          condition: equals("plan", "pro"),
+          condition: branchEquals("plan", "pro"),
           parser: textParser({ default: "" }),
         },
         {
-          condition: equals("plan", "team"),
+          condition: branchEquals("plan", "team"),
           parser: textParser({ default: "", area: true }),
         },
       ],
@@ -170,11 +185,11 @@ describe("ifParser", () => {
     const parser = ifParser({
       branches: [
         {
-          condition: equals("plan", "pro"),
+          condition: branchEquals("plan", "pro"),
           parser: textParser({ default: "" }),
         },
         {
-          condition: equals("seats", 5),
+          condition: branchEquals("seats", 5),
           parser: numberParser({ default: 0 }),
         },
       ],
@@ -268,7 +283,7 @@ describe("ifParser", () => {
     const parser = ifParser({
       branches: [
         {
-          condition: equals("plan", "pro"),
+          condition: branchEquals("plan", "pro"),
           parser: textParser({ default: "" }),
         },
       ],
