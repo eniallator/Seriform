@@ -1,4 +1,6 @@
 import { typedToEntries } from "niall-utils/data";
+import { debounce } from "niall-utils/timing";
+import { dom } from "niall-utils/ui";
 
 import {
   buttonContent,
@@ -230,14 +232,12 @@ const config = createParsers({
 export type Config =
   typeof config extends ResolvedParserObject<infer R> ? R : never;
 
-const configEl = document.getElementById("config-ui") as HTMLElement;
-const valuesOutputEl = document.getElementById("values-output") as HTMLElement;
-const urlOutputEl = document.getElementById("url-output") as HTMLElement;
-const shareStatusEl = document.getElementById("share-status") as HTMLElement;
-const toastEl = document.getElementById("toast") as HTMLElement;
-const shortUrlToggleEl = document.getElementById(
-  "short-url-toggle"
-) as HTMLInputElement;
+const configEl = dom.get("#config-ui");
+const valuesOutputEl = dom.get("#values-output");
+const urlOutputEl = dom.get("#url-output");
+const shareStatusEl = dom.get("#share-status");
+const toastEl = dom.get("#toast");
+const shortUrlToggleEl = dom.get<HTMLInputElement>("#short-url-toggle");
 const root = document.documentElement;
 
 // Plain HTML, not a Seriform field - it decides which mode to build the *main* form in,
@@ -264,14 +264,13 @@ const buildShareUrl = (): string => {
   }`;
 };
 
-let toastTimer: number | undefined;
+const hideToast = debounce(() => {
+  toastEl.hidden = true;
+}, 2200);
 const showToast = (message: string): void => {
   toastEl.textContent = message;
   toastEl.hidden = false;
-  window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => {
-    toastEl.hidden = true;
-  }, 2200);
+  hideToast();
 };
 
 // `shortUrl` can only be set at construction time, so toggling it re-mounts the whole
@@ -317,18 +316,17 @@ const mount = (shortUrl: boolean): void => {
   urlOutputEl.textContent = buildShareUrl();
 };
 
-let shareTimer: number | undefined;
-document.getElementById("share-button")?.addEventListener("click", () => {
+const hideShareStatus = debounce(() => {
+  shareStatusEl.hidden = true;
+}, 1800);
+dom.addListener(dom.get("#share-button"), "click", () => {
   void navigator.clipboard.writeText(buildShareUrl());
 
   shareStatusEl.hidden = false;
-  window.clearTimeout(shareTimer);
-  shareTimer = window.setTimeout(() => {
-    shareStatusEl.hidden = true;
-  }, 1800);
+  hideShareStatus();
 });
 
-shortUrlToggleEl.addEventListener("change", () => {
+dom.addListener(shortUrlToggleEl, "change", () => {
   mount(shortUrlToggleEl.checked);
 });
 

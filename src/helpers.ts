@@ -1,4 +1,5 @@
-import type { FillTuple } from "niall-utils/core";
+import { tuple, type FillTuple } from "niall-utils/core";
+import { generator } from "niall-utils/data";
 import { base64FromUint, type Base64 } from "niall-utils/encoding";
 import { dom } from "niall-utils/ui";
 
@@ -45,12 +46,10 @@ export const parseQuery = (
       ? new RegExp(`[?&]?([^&]{${hashLength}})([^&]*)`, "g")
       : /[?&]?([^=&]+)=?([^&]*)/g;
 
-  const queryEntries: [string, string][] = [];
-  let tokens: ReturnType<RegExp["exec"]>;
-  while ((tokens = queryRegex.exec(query)) != null) {
-    const [_, key, value] = tokens as unknown as FillTuple<string, 3>;
-    queryEntries.push([key, decodeURIComponent(value)]);
-  }
-
-  return Object.fromEntries(queryEntries);
+  return Object.fromEntries(
+    [...generator(() => queryRegex.exec(query))].map(tokens => {
+      const [_, key, value] = tokens as unknown as FillTuple<string, 3>;
+      return tuple(key, decodeURIComponent(value));
+    })
+  );
 };

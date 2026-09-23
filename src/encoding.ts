@@ -4,17 +4,18 @@ import {
   base64ToUint,
   unsafeBase64,
 } from "niall-utils/encoding";
-import { Option } from "niall-utils/functional";
 import { slidingWindow } from "niall-utils/math";
 
 export const encodeArray = (arrays: (string | null | undefined)[]): string =>
   arrays
-    .map(arr => Option.from(arr).getOrElse(() => ""))
-    .map(content => {
-      const prefix =
-        content.length === 0 ? "" : base64FromUint(content.length - 1) || "A";
-      return `${prefix}.${content}`;
-    })
+    .map(
+      item =>
+        `${
+          item == null || item.length === 0
+            ? ""
+            : base64FromUint(item.length - 1)
+        }.${item ?? ""}`
+    )
     .join("");
 
 export const decodeArray = (data: string): (string | null)[] => {
@@ -46,7 +47,7 @@ export const encodeRecord = (
 
 export const decodeRecord = (data: string): Record<string, string | null> =>
   Object.fromEntries(
-    slidingWindow(decodeArray(data), 2, 2).map(
+    slidingWindow(decodeArray(data), 2, 0, 2).map(
       ([key, value]) => [key ?? "", value ?? null] as const
     )
   );

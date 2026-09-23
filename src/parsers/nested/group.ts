@@ -1,6 +1,6 @@
-import { mapFilter } from "niall-utils";
 import { tuple } from "niall-utils/core";
 import { typedFromEntries, typedKeys, typedToEntries } from "niall-utils/data";
+import { mapFilter } from "niall-utils/functional";
 import { dom } from "niall-utils/ui";
 
 import {

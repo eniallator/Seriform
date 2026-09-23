@@ -55,16 +55,16 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "findissues": "pnpm typecheck && pnpm lint && pnpm format:check",
-    "bump-and-release": "./scripts/bump-and-release.sh",
-    "release": "./scripts/release.sh",
+    "bump-and-release": "node scripts/bump-and-release.mjs",
+    "release": "node scripts/release.mjs",
     "publint": "publint run",
     "attw": "attw --pack .",
-    "check-output": "./scripts/check-output.sh",
-    "prepublish": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm build && pnpm test && pnpm publint"
+    "check-output": "node scripts/check-output.mjs",
+    "prepublish": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm build && pnpm test && pnpm publint && pnpm check-output"
   },
   "dependencies": {
     "deep-guards": "^1.4.0",
-    "niall-utils": "^2.0.1"
+    "niall-utils": "^3.0.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
@@ -72,10 +72,11 @@
     "@types/node": "^26.6.2",
     "@vitest/coverage-v8": "^5.0.1",
     "happy-dom": "^20.14.5",
-    "oxlint": "^1.83.0",
+    "oxlint": "^1.85.0",
     "oxlint-tsgolint": "^7.0.2002",
     "prettier": "^3.9.8",
     "publint": "^0.3.24",
+    "tar": "^7.5.22",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"

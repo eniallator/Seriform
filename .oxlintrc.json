@@ -4,6 +4,7 @@
   "options": {
     "typeAware": true
   },
+  "ignorePatterns": ["scripts/**"],
   "categories": {
     "correctness": "error",
     "suspicious": "error"

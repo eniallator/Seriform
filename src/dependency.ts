@@ -1,4 +1,4 @@
-import type { UnionToTuple } from "niall-utils";
+import type { UnionToTuple } from "niall-utils/core";
 
 import type { InitParserObject } from "./parser.ts";
 import type { AnyParserRecord, AnySiblingContext } from "./types.ts";
